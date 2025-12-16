@@ -259,7 +259,7 @@ desktopWrapper.addEventListener('touchend', e=>{
   const dx = e.changedTouches[0].clientX - startX;
   if(dx < -50 && currentDesktop < desktops.length-1) currentDesktop++;
   if(dx > 50 && currentDesktop > 0) currentDesktop--;
-  desktopWrapper.style.transform = `translateX(-${currentDesktop*100}%)`;
+  desktopWrapper.style.transform = `translateX(-${currentDesktop*50}%)`;
 });
 
 function animationLoop(timestamp) {
