@@ -15,185 +15,50 @@ body {
   background: #f5f6fa;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-
-#screen {
-  padding: 16px;
-  max-width: 420px;
-  margin: auto;
-  overflow: hidden;
-}
-
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  text-align: center;
-}
-
-input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-size: 16px;
-  margin-top: 10px;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  font-size: 16px;
-  margin-top: 12px;
-  cursor: pointer;
-}
-
+#screen { padding: 16px; max-width: 420px; margin: auto; overflow: hidden; }
+.card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 6px 16px rgba(0,0,0,0.08); text-align: center; }
+input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; margin-top: 10px; }
+button { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; margin-top: 12px; cursor: pointer; }
 .primary { background: #74b9ff; color: white; }
 .secondary { background: #dfe6e9; color: #2d3436; }
 .danger { background: #ff7675; color: white; }
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.currency {
-  background: white;
-  padding: 8px 12px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  font-weight: 600;
-}
-
+.topbar { display: flex; justify-content: space-between; margin-bottom: 14px; }
+.currency { background: white; padding: 8px 12px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); font-weight: 600; }
 /* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
-
-.together-card {
-  background: #d9d9d9;
-  border-radius: 25px;
-  padding: 16px 18px;
-  margin-bottom: 20px;
-  cursor: pointer;
-}
-
-.together-title {
-  font-size: 20px;
-  line-height: 24px;
-  text-align: left;
-  color: #000;
-}
-
-.together-value {
-  margin-top: 6px;
-  font-size: 36px;
-  line-height: 44px;
-  text-align: center;
-  color: #000;
-  position: relative;
-  overflow: hidden;
-}
-
+.together-card { background: #d9d9d9; border-radius: 25px; padding: 16px 18px; margin-bottom: 20px; cursor: pointer; }
+.together-title { font-size: 20px; line-height: 24px; text-align: left; color: #000; }
+.together-value { margin-top: 6px; font-size: 36px; line-height: 44px; text-align: center; color: #000; position: relative; overflow: hidden; }
 /* ===== АНИМАЦИЯ ===== */
-
-.time-anim {
-  animation: fadeSlide 0.45s ease;
-}
-
-@keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+.time-anim { animation: fadeSlide 0.45s ease; }
+@keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 /* ===== GRID ===== */
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.tile {
-  background: white;
-  border-radius: 16px;
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.tile-wide {
-  grid-column: span 2;
-  height: 70px;
-}
-
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tile { background: white; border-radius: 16px; height: 140px; display: flex; align-items: center; justify-content: center; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.tile-wide { grid-column: span 2; height: 70px; }
 /* ===== MODAL ===== */
-
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
 .hidden { display: none; }
-
-.modal-content {
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  width: 85%;
-  max-width: 360px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 18px;
-  margin-bottom: 12px;
-}
-
-.modal-header button {
-  background: none;
-  border: none;
-  font-size: 22px;
-}
+.modal-content { background: white; border-radius: 20px; padding: 20px; width: 85%; max-width: 360px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; font-size: 18px; margin-bottom: 12px; }
+.modal-header button { background: none; border: none; font-size: 22px; }
 </style>
 </head>
-
 <body>
-
 <div id="screen"></div>
 
-<!-- MODAL -->
+<!-- Модалки -->
 <div id="dateModal" class="modal hidden">
   <div class="modal-content">
-    <div class="modal-header">
-      <span>Дата начала</span>
-      <button id="closeModal">✕</button>
-    </div>
+    <div class="modal-header"><span>Дата начала</span><button id="closeModal">✕</button></div>
     <input type="date" id="dateInput">
     <button class="primary" id="saveDate">Сохранить</button>
     <button class="danger" id="breakInModal">Разорвать пару</button>
   </div>
 </div>
 
-
-<!-- MODAL для настроений -->
 <div id="moodModal" class="modal hidden">
   <div class="modal-content">
-    <div class="modal-header">
-      <span>Настроение партнера</span>
-      <button id="closeMoodModal">✕</button>
-    </div>
+    <div class="modal-header"><span>Настроение партнера</span><button id="closeMoodModal">✕</button></div>
     <div id="partnerMoods" style="margin-bottom:16px;"></div>
     <div style="margin-bottom:8px;">Твое текущее настроение:</div>
     <div id="yourMood" style="font-size: 32px; text-align:center; margin-bottom:16px;"></div>
@@ -210,24 +75,11 @@ button {
   </div>
 </div>
 
-
-
-  
 <script>
-const tg = window.Telegram.WebApp;
-tg.ready();
+const tg = window.Telegram.WebApp; tg.ready();
 
 /* ===== FIREBASE ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyCXxIQD1aNxBvauiY65MMNWuwuXQYeKUn8",
-  authDomain: "mini-app-forcouples.firebaseapp.com",
-  databaseURL: "https://mini-app-forcouples-default-rtdb.firebaseio.com",
-  projectId: "mini-app-forcouples",
-  storageBucket: "mini-app-forcouples.firebasestorage.app",
-  messagingSenderId: "597378655994",
-  appId: "1:597378655994:web:82c08f4e0a81a6894ecb43"
-};
-
+const firebaseConfig = { apiKey:"AIzaSyCXxIQD1aNxBvauiY65MMNWuwuXQYeKUn8", authDomain:"mini-app-forcouples.firebaseapp.com", databaseURL:"https://mini-app-forcouples-default-rtdb.firebaseio.com", projectId:"mini-app-forcouples", storageBucket:"mini-app-forcouples.firebasestorage.app", messagingSenderId:"597378655994", appId:"1:597378655994:web:82c08f4e0a81a6894ecb43" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -235,330 +87,119 @@ const db = firebase.database();
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
 const screen = document.getElementById("screen");
-
-let currentPartner = null;
-let currentSince = null;
-let animInterval = null;
-
-/* ===== РАБОЧИЕ СТОЛЫ ===== */
+let currentPartner = null, currentSince = null, animInterval = null;
 let currentDesktop = 0;
-let desktops = []; // Массив рабочих столов
+let desktops = [[]];
 
-desktops[0].unshift({
-  type: "tile",
-  label: "Настроение",
-  onClick: showMoodModal
-});
+// ===== Плашки =====
+desktops[0].push({type:"tile", label:"Настроение", onClick:showMoodModal});
 
-
-  
 /* ===== HELPERS ===== */
-
-function normalizeNick(nick) { return nick.startsWith("@") ? nick.slice(1) : nick; }
-
-function plural(n, one, two, five) {
-  n = Math.abs(n) % 100; const n1 = n % 10;
-  if (n > 10 && n < 20) return five;
-  if (n1 > 1 && n1 < 5) return two;
-  if (n1 === 1) return one;
-  return five;
-}
-
+function normalizeNick(nick){return nick.startsWith("@")?nick.slice(1):nick;}
+function plural(n,one,two,five){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return five;if(n1>1&&n1<5)return two;if(n1===1)return one;return five;}
 
 /* ===== ЭКРАНЫ ===== */
-
-
-
-
-/* ===== ЭКРАНЫ ===== */
-
-function showStart() {
-  screen.innerHTML = `
-    <div class="card">
-      <h2>Привет, @${selfNick}</h2>
-      <p>Введи ник партнёра</p>
-      <input id="partnerInput" placeholder="nickname">
-      <button class="primary" id="save">Подтвердить</button>
-    </div>
-  `;
-  document.getElementById("save").onclick = () => {
-    const partner = normalizeNick(document.getElementById("partnerInput").value.trim());
-    if (!partner) return;
-    db.ref("pairs/" + selfNick).set({ partner, status: "waiting" });
+function showStart(){
+  screen.innerHTML=`<div class="card"><h2>Привет, @${selfNick}</h2><p>Введи ник партнёра</p><input id="partnerInput" placeholder="nickname"><button class="primary" id="save">Подтвердить</button></div>`;
+  document.getElementById("save").onclick=()=>{
+    const partner=normalizeNick(document.getElementById("partnerInput").value.trim());
+    if(!partner) return;
+    db.ref("pairs/"+selfNick).set({partner,status:"waiting"});
     showWaiting();
   };
 }
-
-function showWaiting() {
-  screen.innerHTML = `
-    <div class="card">
-      <h3>Ожидание партнёра ⏳</h3>
-      <button class="secondary" id="cancel">Отменить запрос</button>
-    </div>
-  `;
-  document.getElementById("cancel").onclick = () => {
-    db.ref("pairs/" + selfNick).remove();
-    showStart();
-  };
+function showWaiting(){
+  screen.innerHTML=`<div class="card"><h3>Ожидание партнёра ⏳</h3><button class="secondary" id="cancel">Отменить запрос</button></div>`;
+  document.getElementById("cancel").onclick=()=>{db.ref("pairs/"+selfNick).remove();showStart();};
+}
+function showBroken(){
+  screen.innerHTML=`<div class="card"><h2>Пара разорвана 😢</h2><button class="primary" id="newLife">Жить новую жизнь</button></div>`;
+  document.getElementById("newLife").onclick=()=>{db.ref("pairs/"+selfNick).remove();showStart();};
 }
 
-function showBroken() {
-  screen.innerHTML = `
-    <div class="card">
-      <h2>Пара разорвана 😢</h2>
-      <button class="primary" id="newLife">Жить новую жизнь</button>
-    </div>
-  `;
-  document.getElementById("newLife").onclick = () => {
-    db.ref("pairs/" + selfNick).remove();
-    showStart();
-  };
+/* ===== "ВМЕСТЕ С" ===== */
+function buildTimeVariants(since){
+  const diff=Date.now()-since,hours=Math.floor(diff/3600000),days=Math.floor(hours/24),weeks=Math.floor(days/7),months=Math.floor(days/30),years=Math.floor(days/365);
+  const arr=[]; if(years>=1)arr.push(`${years} ${plural(years,"год","года","лет")}`); if(months>=1)arr.push(`${months} ${plural(months,"месяц","месяца","месяцев")}`);
+  if(weeks>=1)arr.push(`${weeks} ${plural(weeks,"неделя","недели","недель")}`); if(days>=1)arr.push(`${days} ${plural(days,"день","дня","дней")}`);
+  arr.push(`${Math.max(hours,0)} ${plural(hours,"час","часа","часов")}`); return arr;
 }
-
-/* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
-
-function buildTimeVariants(since) {
-  const diff = Date.now() - since;
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(hours / 24);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
-
-  const arr = [];
-  if (years >= 1) arr.push(`${years} ${plural(years,"год","года","лет")}`);
-  if (months >= 1) arr.push(`${months} ${plural(months,"месяц","месяца","месяцев")}`);
-  if (weeks >= 1) arr.push(`${weeks} ${plural(weeks,"неделя","недели","недель")}`);
-  if (days >= 1) arr.push(`${days} ${plural(days,"день","дня","дней")}`);
-  arr.push(`${Math.max(hours,0)} ${plural(hours,"час","часа","часов")}`);
-  return arr;
+function startTogetherAnimation(since){
+  const dateEl=document.getElementById("sinceDate"); const valueEl=document.getElementById("togetherValue"); if(!dateEl||!valueEl)return;
+  dateEl.textContent=new Date(since).toLocaleDateString("ru-RU");
+  const variants=buildTimeVariants(since); let index=0;
+  if(animInterval) clearInterval(animInterval);
+  function render(){valueEl.classList.remove("time-anim"); void valueEl.offsetWidth; valueEl.textContent=variants[index]; valueEl.classList.add("time-anim"); index=(index+1)%variants.length;}
+  render(); animInterval=setInterval(render,3000);
 }
-
-function startTogetherAnimation(since) {
-  const dateEl = document.getElementById("sinceDate");
-  const valueEl = document.getElementById("togetherValue");
-
-  dateEl.textContent = new Date(since).toLocaleDateString("ru-RU");
-  const variants = buildTimeVariants(since);
-  let index = 0;
-
-  if (animInterval) clearInterval(animInterval);
-
-  function render() {
-    valueEl.classList.remove("time-anim");
-    void valueEl.offsetWidth;
-    valueEl.textContent = variants[index];
-    valueEl.classList.add("time-anim");
-    index = (index + 1) % variants.length;
-  }
-
-  render();
-  animInterval = setInterval(render, 3000);
-}
-
-/* ===== ПЛАШКИ ФУНКЦИИ ===== */
-
 
 /* ===== НАСТРОЕНИЕ ===== */
-const moodModal = document.getElementById("moodModal");
-const closeMoodModalBtn = document.getElementById("closeMoodModal");
-const partnerMoodsDiv = document.getElementById("partnerMoods");
-const yourMoodDiv = document.getElementById("yourMood");
-const moodButtons = document.querySelectorAll(".moodBtn");
-
-function showMoodModal() {
+const moodModal=document.getElementById("moodModal");
+const partnerMoodsDiv=document.getElementById("partnerMoods");
+const yourMoodDiv=document.getElementById("yourMood");
+const moodButtons=document.querySelectorAll(".moodBtn");
+function showMoodModal(){
+  if(!currentPartner)return alert("Партнер не выбран!");
   moodModal.classList.remove("hidden");
-
-  // Загружаем последние 3 настроения партнера
-  db.ref(`moods/${currentPartner}`)
-    .orderByChild("timestamp")
-    .limitToLast(3)
-    .once("value")
-    .then(snapshot => {
-      const moods = snapshot.val() || {};
-      const list = Object.values(moods)
-        .filter(m => m.timestamp) // исключаем поле current
-        .sort((a,b)=>b.timestamp-a.timestamp);
-      partnerMoodsDiv.innerHTML = list.map(m => 
-        `<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span>${m.emoji}</span>
-          <span style="font-size:12px; color:#555;">${new Date(m.timestamp).toLocaleString()}</span>
-        </div>`
-      ).join("");
-    });
-
-  // Загружаем твое текущее настроение
-  db.ref(`moods/${selfNick}/current`).once("value").then(snap=>{
-    yourMoodDiv.textContent = snap.val() || "❔";
+  db.ref(`moods/${currentPartner}`).orderByChild("timestamp").limitToLast(3).once("value").then(snap=>{
+    const moods=snap.val()||{};
+    const list=Object.values(moods).filter(m=>m.timestamp).sort((a,b)=>b.timestamp-a.timestamp);
+    partnerMoodsDiv.innerHTML=list.map(m=>`<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${m.emoji}</span><span style="font-size:12px;color:#555;">${new Date(m.timestamp).toLocaleString()}</span></div>`).join("");
   });
+  db.ref(`moods/${selfNick}/current`).once("value").then(snap=>{yourMoodDiv.textContent=snap.val()||"❔";});
 }
-
-// Смена твоего настроения с ограничением 3 последних
-moodButtons.forEach(btn => {
-  btn.onclick = () => {
-    const emoji = btn.textContent;
-    const moodRef = db.ref(`moods/${selfNick}`);
-    // добавляем новое настроение
-    moodRef.push({ emoji, timestamp: Date.now() }).then(() => {
-      // оставляем только 3 последних
-      moodRef.orderByChild("timestamp").once("value", snap => {
-        const moods = snap.val();
-        const keys = Object.keys(moods).filter(k => k !== "current");
-        if (keys.length > 3) {
-          const sortedKeys = keys.sort((a,b)=>moods[a].timestamp - moods[b].timestamp);
-          const toRemove = sortedKeys.slice(0, keys.length - 3);
-          toRemove.forEach(k => moodRef.child(k).remove());
-        }
-      });
+moodButtons.forEach(btn=>{btn.onclick=()=>{
+  const emoji=btn.textContent;
+  const moodRef=db.ref(`moods/${selfNick}`);
+  moodRef.push({emoji,timestamp:Date.now()}).then(()=>{
+    moodRef.orderByChild("timestamp").once("value",snap=>{
+      const moods=snap.val(); const keys=Object.keys(moods).filter(k=>k!=="current");
+      if(keys.length>3){const sortedKeys=keys.sort((a,b)=>moods[a].timestamp-moods[b].timestamp); const toRemove=sortedKeys.slice(0,keys.length-3); toRemove.forEach(k=>moodRef.child(k).remove());}
     });
-    // обновляем текущее
-    moodRef.child("current").set(emoji);
-    yourMoodDiv.textContent = emoji;
-  };
-});
-
-closeMoodModalBtn.onclick = () => moodModal.classList.add("hidden");
-
-
-
-
-
-  
+  });
+  moodRef.child("current").set(emoji); yourMoodDiv.textContent=emoji;
+};});
+document.getElementById("closeMoodModal").onclick=()=>moodModal.classList.add("hidden");
 
 /* ===== MAIN MENU & DESKTOPS ===== */
-
-function showMainMenu(partner, since) {
-  currentPartner = partner;
-  currentSince = since;
-
-  // Пример рабочих столов
-  desktops = [
-    [
-      {type:"tile", label:"Плашка 1", onClick:()=>alert("Плашка 1")},
-      {type:"tile", label:"Плашка 2", onClick:()=>alert("Плашка 2")},
-      {type:"tile", label:"Плашка 3", onClick:()=>alert("Плашка 3")},
-      {type:"tile", label:"Плашка 4", onClick:()=>alert("Плашка 4")},
-      {type:"tile-wide", label:"Большая плашка", onClick:()=>alert("Большая плашка")},
-    ],
-    [
-      {type:"tile", label:"Плашка 5", onClick:()=>alert("Плашка 5")},
-      {type:"tile", label:"Плашка 6", onClick:()=>alert("Плашка 6")},
-      {type:"tile", label:"Плашка 7", onClick:()=>alert("Плашка 7")},
-      {type:"tile", label:"Плашка 8", onClick:()=>alert("Плашка 8")},
-      {type:"tile-wide", label:"Большая плашка 2", onClick:()=>alert("Большая плашка 2")},
-    ]
-  ];
-
-
-  renderDesktop(currentDesktop);
-  startTogetherAnimation(since);
-  bindTogetherCard();
+function showMainMenu(partner,since){if(!partner)return; currentPartner=partner; currentSince=since; renderDesktop(currentDesktop); startTogetherAnimation(since); bindTogetherCard();}
+function renderDesktop(index){
+  const desktop=desktops[index]; if(!desktop) return;
+  screen.innerHTML=`<div class="topbar"><div class="currency">💰 120</div><div class="currency">💎 3</div></div><div id="togetherCard" class="together-card"><div class="together-title">Вместе с <span id="sinceDate"></span></div><div id="togetherValue" class="together-value"></div></div><div class="grid" id="grid"></div>`;
+  const grid=document.getElementById("grid"); desktop.forEach(tile=>{const div=document.createElement("div"); div.className=tile.type==="tile-wide"?"tile tile-wide":"tile"; div.textContent=tile.label; div.onclick=()=>{if(currentPartner)tile.onClick();}; grid.appendChild(div);});
+  startTogetherAnimation(currentSince); bindTogetherCard();
 }
-
-function renderDesktop(index) {
-  const desktop = desktops[index];
-
-  // Сохраняем текущую дату отношений
-  const since = currentSince;
-
-  screen.innerHTML = `
-    <div class="topbar">
-      <div class="currency">💰 120</div>
-      <div class="currency">💎 3</div>
-    </div>
-    <div id="togetherCard" class="together-card">
-      <div class="together-title">
-        Вместе с <span id="sinceDate"></span>
-      </div>
-      <div id="togetherValue" class="together-value"></div>
-    </div>
-    <div class="grid" id="grid"></div>
-  `;
-
-  // Плашки
-  const grid = document.getElementById("grid");
-  desktop.forEach(tile => {
-    const div = document.createElement("div");
-    div.className = tile.type === "tile-wide" ? "tile tile-wide" : "tile";
-    div.textContent = tile.label;
-    div.onclick = tile.onClick;
-    grid.appendChild(div);
-  });
-
-  // Анимация "вместе с"
-  startTogetherAnimation(since);
-  bindTogetherCard();
-}
-
 
 /* ===== MODAL ===== */
-
-const modal = document.getElementById("dateModal");
-const dateInput = document.getElementById("dateInput");
-
-function bindTogetherCard() {
-  document.getElementById("togetherCard").onclick = () => {
-    dateInput.value = new Date(currentSince).toISOString().split("T")[0];
-    modal.classList.remove("hidden");
-  };
-}
-
-document.getElementById("closeModal").onclick = () => modal.classList.add("hidden");
-document.getElementById("saveDate").onclick = () => {
-  const newDate = new Date(dateInput.value).getTime();
-  if (!newDate) return;
-  db.ref("pairs/" + selfNick + "/since").set(newDate);
-  db.ref("pairs/" + currentPartner + "/since").set(newDate);
-  modal.classList.add("hidden");
-  currentSince = newDate;
-  startTogetherAnimation(newDate);
+const modal=document.getElementById("dateModal");
+const dateInput=document.getElementById("dateInput");
+function bindTogetherCard(){document.getElementById("togetherCard").onclick=()=>{if(!currentPartner)return; dateInput.value=new Date(currentSince).toISOString().split("T")[0]; modal.classList.remove("hidden");};}
+document.getElementById("closeModal").onclick=()=>modal.classList.add("hidden");
+document.getElementById("saveDate").onclick=()=>{
+  const newDate=new Date(dateInput.value).getTime(); if(!newDate||!currentPartner)return;
+  db.ref("pairs/"+selfNick+"/since").set(newDate); db.ref("pairs/"+currentPartner+"/since").set(newDate);
+  modal.classList.add("hidden"); currentSince=newDate; startTogetherAnimation(newDate);
+};
+document.getElementById("breakInModal").onclick=()=>{
+  if(confirm("Вы уверены, что хотите разорвать пару?")){db.ref("pairs/"+selfNick).update({status:"broken"}); modal.classList.add("hidden"); showBroken();}
 };
 
-// Разрыв с подтверждением
-document.getElementById("breakInModal").onclick = () => {
-  if(confirm("Вы уверены, что хотите разорвать пару?")) {
-    db.ref("pairs/" + selfNick).update({ status: "broken" });
-    modal.classList.add("hidden");
-    showBroken();
-  }
-};
-
-/* ===== SWIPE NAVIGATION ===== */
-
-let touchStartX = 0, touchEndX = 0;
-const threshold = 50;
-
-screen.addEventListener("touchstart", e => { touchStartX = e.changedTouches[0].screenX; });
-screen.addEventListener("touchend", e => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); });
-
-function handleSwipe() {
-  const diff = touchEndX - touchStartX;
-  if(Math.abs(diff) > threshold) {
-    if(diff < 0) currentDesktop = Math.min(desktops.length-1, currentDesktop+1);
-    else currentDesktop = Math.max(0, currentDesktop-1);
-    renderDesktop(currentDesktop);
-  }
-}
+/* ===== SWIPE ===== */
+let touchStartX=0,touchEndX=0,threshold=50;
+screen.addEventListener("touchstart",e=>{touchStartX=e.changedTouches[0].screenX;});
+screen.addEventListener("touchend",e=>{touchEndX=e.changedTouches[0].screenX; handleSwipe();});
+function handleSwipe(){const diff=touchEndX-touchStartX;if(Math.abs(diff)>threshold){if(diff<0) currentDesktop=Math.min(desktops.length-1,currentDesktop+1); else currentDesktop=Math.max(0,currentDesktop-1); renderDesktop(currentDesktop);}}
 
 /* ===== LOAD DATA ===== */
-
-db.ref("pairs/" + selfNick).on("value", snap => {
-  const me = snap.val();
-  if(!me || !me.partner) return showStart();
-
-  db.ref("pairs/" + me.partner).once("value").then(s => {
-    const partner = s.val();
-    if(!partner || partner.partner !== selfNick) return showWaiting();
-    if(me.status === "broken" || partner.status === "broken") return showBroken();
-
-    if(!me.since) {
-      const now = Date.now();
-      db.ref("pairs/" + selfNick).update({ status: "active", since: now });
-      db.ref("pairs/" + me.partner).update({ status: "active", since: now });
-      return;
-    }
-
-    showMainMenu(me.partner, me.since);
+db.ref("pairs/"+selfNick).on("value",snap=>{
+  const me=snap.val();
+  if(!me||!me.partner) return showStart();
+  db.ref("pairs/"+me.partner).once("value").then(s=>{
+    const partner=s.val();
+    if(!partner||partner.partner!==selfNick) return showWaiting();
+    if(me.status==="broken"||partner.status==="broken") return showBroken();
+    if(!me.since){const now=Date.now(); db.ref("pairs/"+selfNick).update({status:"active",since:now}); db.ref("pairs/"+me.partner).update({status:"active",since:now}); return;}
+    showMainMenu(me.partner,me.since);
   });
 });
 </script>
