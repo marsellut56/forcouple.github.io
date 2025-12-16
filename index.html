@@ -328,8 +328,16 @@ function showMainMenu(partner, since) {
       {type:"tile", label:"Плашка 3", onClick:()=>alert("Плашка 3")},
       {type:"tile", label:"Плашка 4", onClick:()=>alert("Плашка 4")},
       {type:"tile-wide", label:"Большая плашка", onClick:()=>alert("Большая плашка")},
+    ],
+    [
+      {type:"tile", label:"Плашка 5", onClick:()=>alert("Плашка 5")},
+      {type:"tile", label:"Плашка 6", onClick:()=>alert("Плашка 6")},
+      {type:"tile", label:"Плашка 7", onClick:()=>alert("Плашка 7")},
+      {type:"tile", label:"Плашка 8", onClick:()=>alert("Плашка 8")},
+      {type:"tile-wide", label:"Большая плашка 2", onClick:()=>alert("Большая плашка 2")},
     ]
   ];
+
 
   renderDesktop(currentDesktop);
   startTogetherAnimation(since);
@@ -338,6 +346,10 @@ function showMainMenu(partner, since) {
 
 function renderDesktop(index) {
   const desktop = desktops[index];
+
+  // Сохраняем текущую дату отношений
+  const since = currentSince;
+
   screen.innerHTML = `
     <div class="topbar">
       <div class="currency">💰 120</div>
@@ -351,15 +363,22 @@ function renderDesktop(index) {
     </div>
     <div class="grid" id="grid"></div>
   `;
+
+  // Плашки
   const grid = document.getElementById("grid");
   desktop.forEach(tile => {
     const div = document.createElement("div");
-    div.className = tile.type === "wide" ? "tile tile-wide" : "tile";
+    div.className = tile.type === "tile-wide" ? "tile tile-wide" : "tile";
     div.textContent = tile.label;
     div.onclick = tile.onClick;
     grid.appendChild(div);
   });
+
+  // Анимация "вместе с"
+  startTogetherAnimation(since);
+  bindTogetherCard();
 }
+
 
 /* ===== MODAL ===== */
 
