@@ -3,109 +3,184 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Demo Tiles</title>
+<title>Главный экран с тайлами</title>
 <style>
-body { margin:0; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#f5f6fa; }
-#app { max-width:420px; margin:auto; padding:16px; overflow:hidden; position:relative; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+  #app { width: 100%; height: 100%; display: flex; flex-direction: column; }
 
-.desktop-container { display:flex; transition:transform 0.3s; width:100%; }
-.desktop { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:25%; gap:4px; min-width:100%; }
+  /* Верхняя зона: TopBar */
+  .top-bar {
+    height: 10%;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    font-weight: 600;
+  }
+  .top-bar div { margin-left: 12px; }
 
-.tile {
-  background:white; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-direction:column;
-  cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.08); font-size:14px;
-}
-.tile-title { font-size:12px; opacity:0.6; margin-bottom:6px; }
-.tile-emoji { font-size:32px; }
+  /* Средняя зона: TileArea */
+  .tile-area {
+    height: 70%;
+    position: relative;
+    overflow: hidden;
+  }
+  .desktop-container {
+    display: flex;
+    height: 100%;
+    transition: transform 0.3s ease;
+    width: 200%; /* допустим 2 рабочих стола */
+  }
+  .desktop {
+    width: 50%; /* каждый рабочий стол занимает половину контейнера */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 6px;
+    padding: 6px;
+    box-sizing: border-box;
+  }
 
-button { padding:8px 12px; border:none; border-radius:8px; background:#4a90e2; color:white; cursor:pointer; margin:4px; position:absolute; top:50%; transform:translateY(-50%); }
-#prev { left:0; }
-#next { right:0; }
+  /* Нижняя зона: BottomMenu */
+  .bottom-menu {
+    height: 20%;
+    background: #f5f5f5;
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+  }
 
-.time-anim { animation:fadeSlide 0.4s ease; }
-@keyframes fadeSlide { from {opacity:0; transform:translateY(6px);} to {opacity:1; transform:translateY(0);} }
+  /* Тайлы */
+  .tile {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s ease;
+  }
+  .tile:active {
+    transform: scale(0.95);
+  }
+
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="desktop-container" id="desktopContainer"></div>
-  <button id="prev">◀</button>
-  <button id="next">▶</button>
+  <div class="top-bar">
+    <div>💰 120</div>
+    <div>💎 3</div>
+  </div>
+
+  <div class="tile-area" id="tileArea">
+    <div class="desktop-container" id="desktopContainer">
+      <div class="desktop" id="desktop0"></div>
+      <div class="desktop" id="desktop1"></div>
+    </div>
+  </div>
+
+  <div class="bottom-menu">
+    <!-- Будущее меню -->
+  </div>
 </div>
 
 <script>
-const app = document.getElementById("app");
-const container = document.getElementById("desktopContainer");
-let currentDesktop = 0;
+/* ================== Основные классы ================== */
 
-// =================== TILE SYSTEM ===================
 class Tile {
-  constructor(title, emoji, w=1, h=1, onClick=null){
-    this.title = title;
-    this.emoji = emoji;
-    this.w = w; // ширина в тайловых единицах
-    this.h = h; // высота в тайловых единицах
-    this.onClick = onClick || (()=>alert(`${title} clicked`));
+  constructor(id, widthUnits, heightUnits, label) {
+    this.id = id;
+    this.widthUnits = widthUnits;
+    this.heightUnits = heightUnits;
+    this.label = label;
+    this.element = null;
   }
 
-  render(){
-    const div = document.createElement("div");
-    div.className = "tile";
-    div.style.gridColumn = `span ${this.w}`;
-    div.style.gridRow = `span ${this.h}`;
-    div.innerHTML = `<div class="tile-title">${this.title}</div><div class="tile-emoji">${this.emoji}</div>`;
-    div.onclick = this.onClick;
-    return div;
+  render(container) {
+    const div = document.createElement('div');
+    div.className = 'tile';
+    div.textContent = this.label;
+    div.style.gridColumn = `span ${this.widthUnits}`;
+    div.style.gridRow = `span ${this.heightUnits}`;
+    div.onclick = () => this.onClick();
+    container.appendChild(div);
+    this.element = div;
+  }
+
+  onClick() {
+    alert(`Клик на тайл "${this.label}"`);
   }
 }
 
-// =================== DEMO TILES ===================
-const demoTiles = [
-  new Tile("2x1 Tile","🟦",2,1),
-  new Tile("2x2 Tile","🟩",2,2),
-  new Tile("4x1 Tile","🟥",4,1),
-  new Tile("1x2 Tile","🟨",1,2),
-  new Tile("2x1 Tile","🟪",2,1),
-  new Tile("1x2 Tile","🟧",1,2),
-  new Tile("2x2 Tile","🟫",2,2),
-  new Tile("1x1 Tile","⬛",1,1),
-];
+class Desktop {
+  constructor(id) {
+    this.id = id;
+    this.tiles = [];
+    this.container = document.getElementById(`desktop${id}`);
+  }
 
-// =================== DESKTOPS ===================
+  addTile(tile) {
+    this.tiles.push(tile);
+    tile.render(this.container);
+  }
+}
+
+/* ================== Инициализация рабочих столов ================== */
+
 const desktops = [
-  demoTiles.slice(0,12),  // полностью заполненный рабочий стол
-  demoTiles.slice(4,8)    // частично заполненный второй
+  new Desktop(0),
+  new Desktop(1)
 ];
 
-function renderDesktop(){
-  container.innerHTML = "";
-  desktops.forEach((tiles,i)=>{
-    const desk = document.createElement("div");
-    desk.className = "desktop";
-    tiles.forEach(tile=>{
-      desk.appendChild(tile.render());
-    });
-    container.appendChild(desk);
-  });
-  updateDesktopPosition();
-}
+/* Первый стол полностью заполнен разными тайлами */
+desktops[0].addTile(new Tile('t1','4','1','4x1'));
+desktops[0].addTile(new Tile('t2','2','2','2x2'));
+desktops[0].addTile(new Tile('t3','2','1','2x1'));
+desktops[0].addTile(new Tile('t4','1','2','1x2'));
+desktops[0].addTile(new Tile('t5','2','2','2x2'));
+desktops[0].addTile(new Tile('t6','1','1','1x1'));
+desktops[0].addTile(new Tile('t7','1','1','1x1'));
+desktops[0].addTile(new Tile('t8','2','1','2x1'));
 
-function updateDesktopPosition(){
-  container.style.transform = `translateX(${-currentDesktop*100}%)`;
-}
+/* Второй стол заполнен наполовину */
+desktops[1].addTile(new Tile('t9','2','1','2x1'));
+desktops[1].addTile(new Tile('t10','2','2','2x2'));
+desktops[1].addTile(new Tile('t11','1','2','1x2'));
 
-// =================== NAV BUTTONS ===================
-document.getElementById("prev").onclick = ()=>{
-  currentDesktop = (currentDesktop-1+desktops.length)%desktops.length;
-  updateDesktopPosition();
-};
-document.getElementById("next").onclick = ()=>{
-  currentDesktop = (currentDesktop+1)%desktops.length;
-  updateDesktopPosition();
-};
+/* ================== Свайп для смены рабочего стола ================== */
 
-// =================== INIT ===================
-renderDesktop();
+let currentDesktop = 0;
+const container = document.getElementById('desktopContainer');
+let startX = 0;
+let isDragging = false;
+
+document.getElementById('tileArea').addEventListener('touchstart', (e) => {
+  startX = e.touches[0].clientX;
+  isDragging = true;
+});
+
+document.getElementById('tileArea').addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+});
+
+document.getElementById('tileArea').addEventListener('touchend', (e) => {
+  if (!isDragging) return;
+  const deltaX = e.changedTouches[0].clientX - startX;
+  if (deltaX < -50 && currentDesktop < desktops.length - 1) currentDesktop++;
+  if (deltaX > 50 && currentDesktop > 0) currentDesktop--;
+  container.style.transform = `translateX(-${currentDesktop * 50}%)`;
+  isDragging = false;
+});
+
 </script>
 </body>
 </html>
