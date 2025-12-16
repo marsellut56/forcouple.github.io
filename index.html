@@ -9,7 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 body { font-family: sans-serif; padding: 16px; }
-button { padding: 10px 16px; margin: 4px; font-size: 16px; }
+input, button { padding: 8px; font-size: 16px; margin: 4px 0; width: 100%; }
 </style>
 </head>
 <body>
@@ -37,75 +37,30 @@ const db = firebase.database();
 // ===== Переменные =====
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
-const urlParams = new URLSearchParams(window.location.search);
-let pairCode = urlParams.get('pair');
+const pairCode = "default_pair"; // одна пара, можно расширить позже
 const screen = document.getElementById('screen');
 
 // ===== Функции экранов =====
 function showStartScreen() {
   screen.innerHTML = `
     <h2>Привет, ${selfNick}</h2>
-    <button id="createPair">Создать пару</button>
-  `;
-  document.getElementById('createPair').onclick = createPair;
-}
-
-function createPair() {
-  pairCode = Math.random().toString(36).substr(2,6);
-  db.ref('pairs/' + pairCode).set({
-    selfNick: selfNick,
-    pairStatus: 'waiting'
-  });
-
-  screen.innerHTML = `
-    <h2>Ссылка для партнёра</h2>
-    <p>Скопируйте и отправьте партнёру через Telegram:</p>
-    <p id="link"></p>
-    <button id="copyLink">Скопировать ссылку</button>
-    <p>Ожидаем партнёра...</p>
+    <p>Введите ник вашего партнёра:</p>
+    <input id="partnerInput" placeholder="Ник партнёра">
+    <button id="savePartner">Подтвердить</button>
   `;
 
-  const link = window.location.origin + window.location.pathname + '?pair=' + pairCode;
-  document.getElementById('link').innerText = link;
-
-  document.getElementById('copyLink').onclick = () => {
-    navigator.clipboard.writeText(link);
-    alert('Ссылка скопирована!');
+  document.getElementById('savePartner').onclick = () => {
+    const partnerNick = document.getElementById('partnerInput').value.trim();
+    if (!partnerNick) return alert("Введите ник партнёра!");
+    db.ref('pairs/' + pairCode + '/self').set(selfNick);
+    db.ref('pairs/' + pairCode + '/partner').set(partnerNick);
   };
 
-  // Слушаем статус пары
+  // Слушаем изменения в Firebase
   db.ref('pairs/' + pairCode).on('value', snapshot => {
     const data = snapshot.val();
     if (!data) return;
-    if (data.pairStatus === 'confirmed') showPairScreen(data.selfNick, data.partnerNick);
-    if (data.pairStatus === 'cancelled') showStartScreen();
-  });
-}
-
-function showJoinScreen() {
-  db.ref('pairs/' + pairCode).once('value').then(snapshot => {
-    const data = snapshot.val();
-    if (!data || data.pairStatus !== 'waiting') {
-      alert('Эта пара больше недоступна');
-      showStartScreen();
-      return;
-    }
-    screen.innerHTML = `
-      <h2>Партнёр: ${data.selfNick}</h2>
-      <button id="accept">Да</button>
-      <button id="decline">Нет</button>
-    `;
-    document.getElementById('accept').onclick = () => {
-      db.ref('pairs/' + pairCode).update({
-        partnerNick: selfNick,
-        pairStatus: 'confirmed'
-      });
-      showPairScreen(data.selfNick, selfNick);
-    };
-    document.getElementById('decline').onclick = () => {
-      db.ref('pairs/' + pairCode).update({ pairStatus: 'cancelled' });
-      showStartScreen();
-    };
+    if (data.self && data.partner) showPairScreen(data.self, data.partner);
   });
 }
 
@@ -116,14 +71,8 @@ function showPairScreen(nick1, nick2) {
   `;
 }
 
-// ===== Начало =====
-if (pairCode) {
-  // Партнёр пришёл по ссылке
-  showJoinScreen();
-} else {
-  // Новый пользователь
-  showStartScreen();
-}
+// ===== Старт =====
+showStartScreen();
 </script>
 </body>
 </html>
