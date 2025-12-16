@@ -50,11 +50,36 @@ const db = firebase.database();
 // ===== Переменные =====
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
-const pairCode = "default_pair"; // одна пара
 const screen = document.getElementById('screen');
 const breakBtn = document.getElementById('breakPair');
 
 // ===== Функции =====
+
+// Проверка, есть ли взаимная пара
+function checkPair() {
+  screen.innerHTML = `<p>Загрузка... ⏳</p>`;
+  breakBtn.style.display = 'none';
+
+  db.ref('pairs/' + selfNick).once('value').then(s => {
+    const myData = s.val();
+    if (!myData || !myData.partner) {
+      showStartScreen();
+      return;
+    }
+
+    const partnerNick = myData.partner;
+    db.ref('pairs/' + partnerNick).once('value').then(s2 => {
+      const partnerData = s2.val();
+      if (partnerData && partnerData.partner === selfNick) {
+        showPairScreen(selfNick, partnerNick);
+      } else {
+        showBrokenScreen();
+      }
+    });
+  });
+}
+
+// Стартовый экран для ввода партнёра
 function showStartScreen() {
   breakBtn.style.display = 'none';
   screen.innerHTML = `
@@ -67,32 +92,12 @@ function showStartScreen() {
   document.getElementById('savePartner').onclick = () => {
     const partnerNick = document.getElementById('partnerInput').value.trim();
     if (!partnerNick) return alert("Введите ник партнёра!");
-    db.ref('pairs/' + pairCode).set({
-      self: selfNick,
-      partner: partnerNick,
-      status: 'active'
-    });
-    showLoadingScreen();
+    db.ref('pairs/' + selfNick).set({ partner: partnerNick });
+    checkPair();
   };
 }
 
-function showLoadingScreen() {
-  breakBtn.style.display = 'none';
-  screen.innerHTML = `<p>Загрузка... ⏳</p>`;
-
-  db.ref('pairs/' + pairCode).on('value', snapshot => {
-    const data = snapshot.val();
-    if (!data) return showStartScreen();
-    
-    if (data.status === 'active' && data.self && data.partner) {
-      showPairScreen(data.self, data.partner);
-    }
-    if (data.status === 'broken') {
-      showBrokenScreen();
-    }
-  });
-}
-
+// Экран пары
 function showPairScreen(nick1, nick2) {
   breakBtn.style.display = 'block';
   screen.innerHTML = `
@@ -101,6 +106,7 @@ function showPairScreen(nick1, nick2) {
   `;
 }
 
+// Экран разорванной пары
 function showBrokenScreen() {
   breakBtn.style.display = 'none';
   screen.innerHTML = `
@@ -108,19 +114,19 @@ function showBrokenScreen() {
     <button id="newLife">Жить новую жизнь</button>
   `;
   document.getElementById('newLife').onclick = () => {
-    db.ref('pairs/' + pairCode).remove();
+    db.ref('pairs/' + selfNick).remove();
     showStartScreen();
   };
 }
 
-// ===== Разрыв пары =====
+// Разрыв пары пользователем
 breakBtn.onclick = () => {
-  db.ref('pairs/' + pairCode).update({ status: 'broken' });
+  db.ref('pairs/' + selfNick).remove();
   showBrokenScreen();
 }
 
 // ===== Старт =====
-showStartScreen();
+checkPair();
 </script>
 </body>
 </html>
