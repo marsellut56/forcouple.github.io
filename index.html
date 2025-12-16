@@ -186,11 +186,14 @@ const desktopWrapper = document.getElementById('desktopWrapper');
 const desktops = [];
 
 // Первый рабочий стол - заполненный
-const demoTiles = createDemoTiles();
-desk1.tiles = demoTiles;
+// Первый рабочий стол - заполненный
+const desk1 = document.createElement('div');
+desk1.className = 'desktop';
+desk1.tiles = createDemoTiles();
 desk1.tiles.forEach(tile => desk1.appendChild(tile.el));
 desktopWrapper.appendChild(desk1);
 desktops.push(desk1);
+
 
 // Второй рабочий стол - частично заполненный
 const desk2 = document.createElement('div');
