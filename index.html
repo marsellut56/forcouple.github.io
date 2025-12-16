@@ -3,24 +3,118 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini App для парочек</title>
+<title>For Couple</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
-body { font-family: 'Helvetica', sans-serif; margin:0; padding:0; background: #f5f6fa; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-#screen { margin-top: 80px; width: 90%; max-width: 400px; }
-.card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
-input { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #dcdde1; width: 100%; margin: 10px 0; }
-button { padding: 12px; font-size: 16px; border-radius: 8px; border: none; width: 100%; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-button:hover { opacity: 0.9; }
-#breakPair { position: fixed; top: 16px; right: 16px; background: #ff4d4f; color: white; border-radius: 8px; padding: 8px 12px; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display: none; }
-.waiting { background: #ffeaa7; }
-.active { background: #55efc4; }
-.broken { background: #fab1a0; }
-.cancelBtn { background:#dfe6e9; color:#2d3436; }
+body {
+  margin: 0;
+  background: #f5f6fa;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#screen {
+  padding: 16px;
+  max-width: 420px;
+  margin: auto;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.primary { background: #74b9ff; color: white; }
+.secondary { background: #dfe6e9; color: #2d3436; }
+.danger { background: #ff7675; color: white; }
+
+#breakPair {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  background: #ff7675;
+  color: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  border: none;
+  display: none;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.currency {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  font-weight: 600;
+}
+
+.time-card {
+  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  color: white;
+  border-radius: 16px;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  transition: opacity 0.3s;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tile {
+  background: white;
+  border-radius: 16px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.tile-wide {
+  grid-column: span 2;
+  height: 70px;
+}
 </style>
 </head>
+
 <body>
 
 <div id="screen"></div>
@@ -40,110 +134,172 @@ const firebaseConfig = {
   appId: "1:597378655994:web:82c08f4e0a81a6894ecb43",
   measurementId: "G-6DM9GWM2QR"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
-const screen = document.getElementById('screen');
-const breakBtn = document.getElementById('breakPair');
+const screen = document.getElementById("screen");
+const breakBtn = document.getElementById("breakPair");
 
-// ===== Функции =====
 function normalizeNick(nick) {
-  return nick.startsWith('@') ? nick.slice(1) : nick;
+  return nick.startsWith("@") ? nick.slice(1) : nick;
 }
 
-function checkPair() {
-  screen.innerHTML = `<div class="card waiting"><p>Загрузка... ⏳</p></div>`;
-  breakBtn.style.display = 'none';
+function formatDate(ts) {
+  return new Date(ts).toLocaleDateString("ru-RU");
+}
 
-  db.ref('pairs/' + selfNick).on('value', snapshot => {
-    const myData = snapshot.val();
-    if (!myData || !myData.partner) {
-      showStartScreen();
+/* ===== ЭКРАНЫ ===== */
+
+function showStart() {
+  breakBtn.style.display = "none";
+  screen.innerHTML = `
+    <div class="card">
+      <h2>Привет, @${selfNick}</h2>
+      <p>Введи ник партнёра</p>
+      <input id="partnerInput" placeholder="nickname">
+      <button class="primary" id="save">Подтвердить</button>
+    </div>
+  `;
+
+  document.getElementById("save").onclick = () => {
+    const partner = normalizeNick(
+      document.getElementById("partnerInput").value.trim()
+    );
+    if (!partner) return;
+    db.ref("pairs/" + selfNick).set({
+      partner,
+      status: "waiting"
+    });
+    showWaiting();
+  };
+}
+
+function showWaiting() {
+  breakBtn.style.display = "none";
+  screen.innerHTML = `
+    <div class="card">
+      <h3>Ожидание партнёра ⏳</h3>
+      <button class="secondary" id="cancel">Отменить запрос</button>
+    </div>
+  `;
+
+  document.getElementById("cancel").onclick = () => {
+    db.ref("pairs/" + selfNick).remove();
+    showStart();
+  };
+}
+
+function showBroken() {
+  breakBtn.style.display = "none";
+  screen.innerHTML = `
+    <div class="card">
+      <h2>Пара разорвана 😢</h2>
+      <button class="primary" id="newLife">Жить новую жизнь</button>
+    </div>
+  `;
+
+  document.getElementById("newLife").onclick = () => {
+    db.ref("pairs/" + selfNick).remove();
+    showStart();
+  };
+}
+
+function showMainMenu(partner, since) {
+  breakBtn.style.display = "block";
+
+  screen.innerHTML = `
+    <div class="topbar">
+      <div class="currency">💰 120</div>
+      <div class="currency">💎 3</div>
+    </div>
+
+    <div class="card">
+      <h3>Вместе с ${formatDate(since)}</h3>
+      <div id="timeCard" class="time-card"></div>
+    </div>
+
+    <div class="grid">
+      <div class="tile">Плашка</div>
+      <div class="tile">Плашка</div>
+      <div class="tile tile-wide">Большая плашка</div>
+    </div>
+  `;
+
+  startTimeAnimation(since);
+}
+
+/* ===== ЛОГИКА ===== */
+
+function startTimeAnimation(since) {
+  const card = document.getElementById("timeCard");
+
+  function variants() {
+    const diff = Date.now() - since;
+    const h = Math.floor(diff / 3600000);
+    const d = Math.floor(diff / 86400000);
+    const w = Math.floor(d / 7);
+    const m = Math.floor(d / 30);
+    const y = Math.floor(d / 365);
+
+    const v = [];
+    if (h >= 1) v.push(`${h} часов вместе`);
+    if (d >= 1) v.push(`${d} дней вместе`);
+    if (w >= 1) v.push(`${w} недель вместе`);
+    if (m >= 1) v.push(`${m} месяцев вместе`);
+    if (y >= 1) v.push(`${y} лет вместе`);
+    return v;
+  }
+
+  let i = 0;
+  const list = variants();
+  card.textContent = list[0];
+
+  setInterval(() => {
+    card.style.opacity = 0;
+    setTimeout(() => {
+      i = (i + 1) % list.length;
+      card.textContent = list[i];
+      card.style.opacity = 1;
+    }, 300);
+  }, 3000);
+}
+
+breakBtn.onclick = () => {
+  db.ref("pairs/" + selfNick).update({ status: "broken" });
+  showBroken();
+};
+
+/* ===== ЗАГРУЗКА ===== */
+
+db.ref("pairs/" + selfNick).on("value", snap => {
+  const me = snap.val();
+  if (!me || !me.partner) return showStart();
+
+  db.ref("pairs/" + me.partner).once("value").then(s => {
+    const partner = s.val();
+
+    if (!partner || partner.partner !== selfNick) {
+      return showWaiting();
+    }
+
+    if (me.status === "broken" || partner.status === "broken") {
+      return showBroken();
+    }
+
+    if (!me.since) {
+      const now = Date.now();
+      db.ref("pairs/" + selfNick).update({ status: "active", since: now });
+      db.ref("pairs/" + me.partner).update({ status: "active", since: now });
       return;
     }
 
-    const partnerNick = myData.partner;
-
-    db.ref('pairs/' + partnerNick).once('value').then(s => {
-      const partnerData = s.val();
-
-      // Ожидание партнёра
-      if (!partnerData || partnerData.partner !== selfNick) {
-        showWaitingScreen();
-        return;
-      }
-
-      // Пара активна
-      if (myData.status !== 'active') {
-        db.ref('pairs/' + selfNick).update({ status: 'active' });
-        db.ref('pairs/' + partnerNick).update({ status: 'active' });
-      }
-
-      if (myData.status === 'broken' || partnerData.status === 'broken') {
-        showBrokenScreen();
-      } else {
-        showPairScreen(selfNick, partnerNick);
-      }
-    });
+    showMainMenu(me.partner, me.since);
   });
-}
-
-function showStartScreen() {
-  breakBtn.style.display = 'none';
-  screen.innerHTML = `
-    <div class="card waiting">
-      <h2>Привет, ${selfNick}!</h2>
-      <p>Введите ник вашего партнёра:</p>
-      <input id="partnerInput" placeholder="Ник партнёра">
-      <button id="savePartner" style="background:#74b9ff; color:white;">Подтвердить</button>
-    </div>
-  `;
-  document.getElementById('savePartner').onclick = () => {
-    let partnerNick = normalizeNick(document.getElementById('partnerInput').value.trim());
-    if (!partnerNick) return alert("Введите ник партнёра!");
-    db.ref('pairs/' + selfNick).set({ partner: partnerNick, status: 'waiting' });
-    showWaitingScreen();
-  };
-}
-
-function showWaitingScreen() {
-  breakBtn.style.display = 'none';
-  screen.innerHTML = `
-    <div class="card waiting">
-      <p>Ожидание партнёра… ⏳</p>
-      <button id="cancelRequest" class="cancelBtn">Отменить запрос</button>
-    </div>
-  `;
-  document.getElementById('cancelRequest').onclick = () => {
-    db.ref('pairs/' + selfNick + '/partner').remove();
-    showStartScreen();
-  };
-}
-
-function showPairScreen(nick1, nick2) {
-  breakBtn.style.display = 'block';
-  screen.innerHTML = `<div class="card active"><h2>Парочка готова! 💖</h2><p>@${nick1} + @${nick2}</p></div>`;
-}
-
-function showBrokenScreen() {
-  breakBtn.style.display = 'none';
-  screen.innerHTML = `<div class="card broken"><h2>Пара разорвана 😢</h2><button id="newLife" style="background:#6c5ce7; color:white;">Жить новую жизнь</button></div>`;
-  document.getElementById('newLife').onclick = () => {
-    db.ref('pairs/' + selfNick).remove();
-    showStartScreen();
-  };
-}
-
-// ===== Разрыв пары =====
-breakBtn.onclick = () => {
-  db.ref('pairs/' + selfNick).update({ status: 'broken' });
-  showBrokenScreen();
-}
-
-// ===== Старт =====
-checkPair();
+});
 </script>
+
 </body>
 </html>
