@@ -30,7 +30,6 @@ body, html { margin:0; padding:0; height:100%; width:100%; font-family: sans-ser
   display: flex;
   height:100%;
   transition: transform 0.3s ease;
-  width: 200%; /* ширина = 100% * количество рабочих столов */
 }
 
 /* Каждый рабочий стол */
@@ -40,7 +39,7 @@ body, html { margin:0; padding:0; height:100%; width:100%; font-family: sans-ser
   grid-auto-rows: calc(84% / 6);
   gap: 8px;
   flex-shrink: 0;
-  width: 50%; /* ширина = 100% / количество рабочих столов */
+  width: 100%;
   box-sizing: border-box;
   padding: 4px;
 }
@@ -83,14 +82,12 @@ body, html { margin:0; padding:0; height:100%; width:100%; font-family: sans-ser
 </div>
 
 <script>
-/* ===== Класс тайла ===== */
 class Tile {
   constructor({title='', w=1, h=1, onClick=null, renderContent=null}) {
     this.title = title;
     this.w = w;
     this.h = h;
     this.onClick = onClick;
-    this.renderContent = renderContent;
     this.el = document.createElement('div');
     this.el.className = 'tile';
     this.el.style.gridColumn = `span ${w}`;
@@ -102,153 +99,113 @@ class Tile {
   tick(deltaTime) {}
 }
 
-/* ===== MoodTile ===== */
 class MoodTile extends Tile {
   constructor(initialEmoji = '❔') {
-    super({
-      title:'', w:1,h:1,
-      onClick: (tile) => {
-        const newEmoji = prompt("Выберите настроение:", tile.emoji) || tile.emoji;
-        tile.setEmoji(newEmoji);
-      },
-      renderContent: (el) => {
-        el.style.fontSize = '48px';
-        el.style.textAlign = 'center';
-        el.style.lineHeight = '1';
-      }
-    });
+    super({title:'', w:1, h:1, renderContent:(el)=>{
+      el.style.fontSize='48px';
+      el.style.textAlign='center';
+      el.style.lineHeight='1';
+    }, onClick: (tile)=>{
+      const newEmoji = prompt("Выберите настроение:", tile.emoji) || tile.emoji;
+      tile.setEmoji(newEmoji);
+    }});
     this.emoji = initialEmoji;
     this.update();
   }
-  setEmoji(emoji) { this.emoji = emoji; this.update(); }
-  update() { this.el.textContent = this.emoji; }
+  setEmoji(emoji){this.emoji=emoji; this.update();}
+  update(){this.el.textContent=this.emoji;}
 }
 
-/* ===== PulsingTile ===== */
 class PulsingTile extends Tile {
   constructor() {
     super({title:'', w:1,h:1, renderContent:(el)=>{
       this.flame = document.createElement('div');
-      this.flame.textContent = '🔥';
-      this.flame.style.fontSize = '32px';
-      this.flame.style.lineHeight = '1';
+      this.flame.textContent='🔥';
+      this.flame.style.fontSize='32px';
       el.appendChild(this.flame);
     }});
-    this.scale = 1;
-    this.growing = true;
+    this.scale=1;
+    this.growing=true;
   }
-  tick(deltaTime) {
-    const speed = 0.0002; // медленно
-    if(this.growing) {
-      this.scale += speed*deltaTime;
-      if(this.scale >= 1.2) this.growing = false;
-    } else {
-      this.scale -= speed*deltaTime;
-      if(this.scale <= 1) this.growing = true;
-    }
-    this.flame.style.transform = `scale(${this.scale})`;
+  tick(deltaTime){
+    const speed=0.0002;
+    if(this.growing){this.scale+=speed*deltaTime;if(this.scale>=1.2)this.growing=false;}
+    else{this.scale-=speed*deltaTime;if(this.scale<=1)this.growing=true;}
+    this.flame.style.transform=`scale(${this.scale})`;
   }
 }
 
-/* ===== Демо тайлы ===== */
-function createDemoTiles() {
+function createDemoTiles(){
   return [
-    new Tile({title:'2x1', w:2, h:1, onClick:()=>alert('2x1 clicked')}),
-    new Tile({title:'2x2', w:2, h:2, onClick:()=>alert('2x2 clicked')}),
-    new Tile({title:'4x1', w:4, h:1, onClick:()=>alert('4x1 clicked')}),
-    new Tile({title:'1x2', w:1, h:2, onClick:()=>alert('1x2 clicked')}),
+    new Tile({title:'2x1', w:2,h:1, onClick:()=>alert('2x1 clicked')}),
+    new Tile({title:'2x2', w:2,h:2, onClick:()=>alert('2x2 clicked')}),
+    new Tile({title:'4x1', w:4,h:1, onClick:()=>alert('4x1 clicked')}),
+    new Tile({title:'1x2', w:1,h:2, onClick:()=>alert('1x2 clicked')}),
     new MoodTile('😊'),
-    new Tile({title:'1x1b', w:1, h:1}),
-    new Tile({title:'2x1b', w:2, h:1}),
-    new Tile({title:'1x2b', w:1, h:2}),
+    new Tile({title:'1x1b', w:1,h:1}),
+    new Tile({title:'2x1b', w:2,h:1}),
+    new Tile({title:'1x2b', w:1,h:2}),
   ];
 }
 
-/* ===== Создаем рабочие столы ===== */
 const desktopWrapper = document.getElementById('desktopWrapper');
 const desktops = [];
 
-// Первый рабочий стол
-const desk1 = document.createElement('div');
-desk1.className = 'desktop';
-desk1.tiles = createDemoTiles();
-desk1.tiles.forEach(tile => desk1.appendChild(tile.el));
+// первый рабочий стол
+const desk1 = document.createElement('div'); desk1.className='desktop';
+desk1.tiles=createDemoTiles();
+desk1.tiles.forEach(t=>desk1.appendChild(t.el));
 desktopWrapper.appendChild(desk1);
 desktops.push(desk1);
 
-// Второй рабочий стол
-const desk2 = document.createElement('div');
-desk2.className = 'desktop';
-desk2.tiles = [];
-const tileA = new Tile({title:'2x2', w:2, h:2});
-const tileB = new PulsingTile();
-desk2.tiles.push(tileA, tileB);
-desk2.tiles.forEach(tile => desk2.appendChild(tile.el));
+// второй рабочий стол
+const desk2 = document.createElement('div'); desk2.className='desktop'; desk2.tiles=[];
+const tileA=new Tile({title:'2x2', w:2,h:2});
+const tileB=new PulsingTile();
+desk2.tiles.push(tileA,tileB);
+desk2.tiles.forEach(t=>desk2.appendChild(t.el));
 desktopWrapper.appendChild(desk2);
 desktops.push(desk2);
 
-/* ===== Свайпы ===== */
-let currentDesktop = 0;
-let startX = 0;
-let isDragging = false;
+// Устанавливаем ширину wrapper = количество рабочих столов * 100%
+desktopWrapper.style.width = `${desktops.length*100}%`;
+desktops.forEach(d=>d.style.width=`${100/desktops.length}%`);
 
-function updateTransform(dx=0) {
-  desktopWrapper.style.transform = `translateX(${-currentDesktop*50 + dx/desktopWrapper.offsetWidth*100}%)`;
+// свайп
+let currentDesktop=0, startX=0, isDragging=false;
+function updateTransform(dx=0){
+  const percent = dx / desktopWrapper.offsetWidth * 100;
+  desktopWrapper.style.transform = `translateX(${-currentDesktop*100 + percent}%)`;
 }
-
-desktopWrapper.addEventListener('mousedown', e=>{
-  startX = e.clientX; isDragging = true;
-});
-desktopWrapper.addEventListener('mousemove', e=>{
-  if(!isDragging) return;
-  const dx = e.clientX - startX;
-  updateTransform(dx);
-});
+desktopWrapper.addEventListener('mousedown', e=>{startX=e.clientX; isDragging=true;});
+desktopWrapper.addEventListener('mousemove', e=>{if(!isDragging)return; updateTransform(e.clientX-startX);});
 desktopWrapper.addEventListener('mouseup', e=>{
-  if(!isDragging) return;
-  isDragging = false;
-  const dx = e.clientX - startX;
-  if(dx < -50 && currentDesktop < desktops.length-1) currentDesktop++;
-  if(dx > 50 && currentDesktop > 0) currentDesktop--;
+  if(!isDragging)return; isDragging=false;
+  const dx = e.clientX-startX;
+  if(dx<-50 && currentDesktop<desktops.length-1) currentDesktop++;
+  if(dx>50 && currentDesktop>0) currentDesktop--;
   updateTransform();
 });
-desktopWrapper.addEventListener('mouseleave', e=>{
-  if(!isDragging) return;
-  isDragging = false;
-  updateTransform();
-});
-
-// Touch
-desktopWrapper.addEventListener('touchstart', e=>{
-  startX = e.touches[0].clientX; isDragging = true;
-});
-desktopWrapper.addEventListener('touchmove', e=>{
-  if(!isDragging) return;
-  const dx = e.touches[0].clientX - startX;
-  updateTransform(dx);
-});
+desktopWrapper.addEventListener('mouseleave', e=>{if(!isDragging)return; isDragging=false; updateTransform();});
+desktopWrapper.addEventListener('touchstart', e=>{startX=e.touches[0].clientX; isDragging=true;});
+desktopWrapper.addEventListener('touchmove', e=>{if(!isDragging)return; updateTransform(e.touches[0].clientX-startX);});
 desktopWrapper.addEventListener('touchend', e=>{
-  if(!isDragging) return;
-  isDragging = false;
-  const dx = e.changedTouches[0].clientX - startX;
-  if(dx < -50 && currentDesktop < desktops.length-1) currentDesktop++;
-  if(dx > 50 && currentDesktop > 0) currentDesktop--;
+  if(!isDragging)return; isDragging=false;
+  const dx=e.changedTouches[0].clientX-startX;
+  if(dx<-50 && currentDesktop<desktops.length-1) currentDesktop++;
+  if(dx>50 && currentDesktop>0) currentDesktop--;
   updateTransform();
 });
 
-/* ===== Анимации ===== */
-function animationLoop(timestamp) {
-  if(!animationLoop.last) animationLoop.last = timestamp;
-  const deltaTime = timestamp - animationLoop.last;
-  animationLoop.last = timestamp;
-
-  const currentDesk = desktops[currentDesktop];
-  if(currentDesk) currentDesk.tiles.forEach(tile=>tile.tick(deltaTime));
-
+// анимация
+function animationLoop(timestamp){
+  if(!animationLoop.last) animationLoop.last=timestamp;
+  const deltaTime=timestamp-animationLoop.last;
+  animationLoop.last=timestamp;
+  desktops[currentDesktop].tiles.forEach(t=>t.tick(deltaTime));
   requestAnimationFrame(animationLoop);
 }
 requestAnimationFrame(animationLoop);
-
 </script>
 </body>
 </html>
