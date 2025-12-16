@@ -10,10 +10,12 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
+/* ===== BODY ===== */
 body {
   margin: 0;
-  background: #f5f6fa;
+  background: #e5e5e5;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1c1c1c;
 }
 
 #screen {
@@ -22,6 +24,7 @@ body {
   margin: auto;
 }
 
+/* ===== CARDS ===== */
 .card {
   background: white;
   border-radius: 16px;
@@ -34,8 +37,8 @@ body {
 input {
   width: 100%;
   padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
+  border-radius: 12px;
+  border: 1px solid #ccc;
   font-size: 16px;
   margin-top: 10px;
 }
@@ -48,25 +51,18 @@ button {
   font-size: 16px;
   margin-top: 12px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
-.primary { background: #74b9ff; color: white; }
-.secondary { background: #dfe6e9; color: #2d3436; }
-.danger { background: #ff7675; color: white; }
-
-#breakPair {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  background: #ff7675;
-  color: white;
-  border-radius: 10px;
-  padding: 8px 12px;
-  border: none;
-  display: none;
-  z-index: 10;
+button:hover {
+  opacity: 0.9;
 }
 
+.primary { background: #0088cc; color: white; }
+.secondary { background: #f0f0f0; color: #1c1c1c; }
+.danger { background: #ff4d4f; color: white; }
+
+/* ===== TOPBAR ===== */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -81,52 +77,49 @@ button {
   font-weight: 600;
 }
 
-/* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
-
+/* ===== TOGETHER CARD ===== */
 .together-card {
-  background: #d9d9d9;
-  border-radius: 25px;
+  background: #ffffff;
+  border-radius: 20px;
   padding: 16px 18px;
   margin-bottom: 20px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: 0.2s;
+}
+
+.together-card:hover {
+  background: #f5f7fa;
 }
 
 .together-title {
-  font-size: 20px;
-  line-height: 24px;
+  font-size: 18px;
+  line-height: 22px;
   text-align: left;
-  color: #000;
+  color: #1c1c1c;
 }
 
 .together-value {
   margin-top: 6px;
-  font-size: 36px;
-  line-height: 44px;
+  font-size: 32px;
+  line-height: 40px;
   text-align: center;
-  color: #000;
+  color: #0088cc;
   position: relative;
   overflow: hidden;
 }
 
-/* ===== АНИМАЦИЯ ===== */
-
+/* ===== ANIMATION ===== */
 .time-anim {
   animation: fadeSlide 0.45s ease;
 }
 
 @keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== GRID ===== */
-
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -150,7 +143,6 @@ button {
 }
 
 /* ===== MODAL ===== */
-
 .modal {
   position: fixed;
   inset: 0;
@@ -184,13 +176,23 @@ button {
   border: none;
   font-size: 22px;
 }
+
+/* ===== CONFIRMATION ===== */
+.confirmation {
+  margin-top: 12px;
+  display: none;
+  text-align: center;
+}
+
+.confirmation p {
+  margin-bottom: 12px;
+}
 </style>
 </head>
 
 <body>
 
 <div id="screen"></div>
-<button id="breakPair">Разорвать пару</button>
 
 <!-- MODAL -->
 <div id="dateModal" class="modal hidden">
@@ -201,6 +203,12 @@ button {
     </div>
     <input type="date" id="dateInput">
     <button class="primary" id="saveDate">Сохранить</button>
+    <button class="danger" id="breakRelationship">Разорвать отношения</button>
+    <div class="confirmation" id="confirmBreak">
+      <p>Вы уверены, что хотите разорвать отношения?</p>
+      <button class="danger" id="confirmYes">Да</button>
+      <button class="secondary" id="confirmNo">Нет</button>
+    </div>
   </div>
 </div>
 
@@ -218,7 +226,6 @@ const firebaseConfig = {
   messagingSenderId: "597378655994",
   appId: "1:597378655994:web:82c08f4e0a81a6894ecb43"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -226,17 +233,13 @@ const db = firebase.database();
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
 const screen = document.getElementById("screen");
-const breakBtn = document.getElementById("breakPair");
 
 let currentPartner = null;
 let currentSince = null;
 let animInterval = null;
 
 /* ===== HELPERS ===== */
-
-function normalizeNick(nick) {
-  return nick.startsWith("@") ? nick.slice(1) : nick;
-}
+function normalizeNick(nick) { return nick.startsWith("@") ? nick.slice(1) : nick; }
 
 function plural(n, one, two, five) {
   n = Math.abs(n) % 100;
@@ -247,10 +250,8 @@ function plural(n, one, two, five) {
   return five;
 }
 
-/* ===== ЭКРАНЫ ===== */
-
+/* ===== SCREENS ===== */
 function showStart() {
-  breakBtn.style.display = "none";
   screen.innerHTML = `
     <div class="card">
       <h2>Привет, @${selfNick}</h2>
@@ -268,7 +269,6 @@ function showStart() {
 }
 
 function showWaiting() {
-  breakBtn.style.display = "none";
   screen.innerHTML = `
     <div class="card">
       <h3>Ожидание партнёра ⏳</h3>
@@ -282,7 +282,6 @@ function showWaiting() {
 }
 
 function showBroken() {
-  breakBtn.style.display = "none";
   screen.innerHTML = `
     <div class="card">
       <h2>Пара разорвана 😢</h2>
@@ -296,7 +295,6 @@ function showBroken() {
 }
 
 function showMainMenu(partner, since) {
-  breakBtn.style.display = "block";
   currentPartner = partner;
   currentSince = since;
 
@@ -324,11 +322,9 @@ function showMainMenu(partner, since) {
   bindTogetherCard();
 }
 
-/* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
-
+/* ===== TOGETHER CARD ===== */
 function buildTimeVariants(since) {
   const diff = Date.now() - since;
-
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(hours / 24);
   const weeks = Math.floor(days / 7);
@@ -336,13 +332,11 @@ function buildTimeVariants(since) {
   const years = Math.floor(days / 365);
 
   const arr = [];
-
   if (years >= 1) arr.push(`${years} ${plural(years,"год","года","лет")}`);
   if (months >= 1) arr.push(`${months} ${plural(months,"месяц","месяца","месяцев")}`);
   if (weeks >= 1) arr.push(`${weeks} ${plural(weeks,"неделя","недели","недель")}`);
   if (days >= 1) arr.push(`${days} ${plural(days,"день","дня","дней")}`);
   arr.push(`${Math.max(hours,0)} ${plural(hours,"час","часа","часов")}`);
-
   return arr;
 }
 
@@ -370,14 +364,18 @@ function startTogetherAnimation(since) {
 }
 
 /* ===== MODAL ===== */
-
 const modal = document.getElementById("dateModal");
 const dateInput = document.getElementById("dateInput");
+const breakBtnModal = document.getElementById("breakRelationship");
+const confirmBox = document.getElementById("confirmBreak");
+const confirmYes = document.getElementById("confirmYes");
+const confirmNo = document.getElementById("confirmNo");
 
 function bindTogetherCard() {
   document.getElementById("togetherCard").onclick = () => {
     dateInput.value = new Date(currentSince).toISOString().split("T")[0];
     modal.classList.remove("hidden");
+    confirmBox.style.display = "none";
   };
 }
 
@@ -385,6 +383,7 @@ document.getElementById("closeModal").onclick = () => {
   modal.classList.add("hidden");
 };
 
+/* Сохранение даты */
 document.getElementById("saveDate").onclick = () => {
   const newDate = new Date(dateInput.value).getTime();
   if (!newDate) return;
@@ -397,15 +396,23 @@ document.getElementById("saveDate").onclick = () => {
   startTogetherAnimation(newDate);
 };
 
-/* ===== РАЗРЫВ ===== */
+/* Разорвать через модальное окно */
+breakBtnModal.onclick = () => {
+  confirmBox.style.display = "block";
+};
 
-breakBtn.onclick = () => {
+/* Подтверждение */
+confirmYes.onclick = () => {
   db.ref("pairs/" + selfNick).update({ status: "broken" });
+  modal.classList.add("hidden");
   showBroken();
 };
 
-/* ===== ЗАГРУЗКА ===== */
+confirmNo.onclick = () => {
+  confirmBox.style.display = "none";
+};
 
+/* ===== ЗАГРУЗКА ===== */
 db.ref("pairs/" + selfNick).on("value", snap => {
   const me = snap.val();
   if (!me || !me.partner) return showStart();
