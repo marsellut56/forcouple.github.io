@@ -64,6 +64,7 @@ button {
   padding: 8px 12px;
   border: none;
   display: none;
+  z-index: 10;
 }
 
 .topbar {
@@ -80,16 +81,32 @@ button {
   font-weight: 600;
 }
 
-.time-card {
-  background: linear-gradient(135deg, #74b9ff, #a29bfe);
-  color: white;
-  border-radius: 16px;
-  padding: 18px;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 18px;
-  transition: opacity 0.3s;
+/* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
+
+.together-card {
+  background: #d9d9d9;
+  border-radius: 25px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  cursor: pointer;
 }
+
+.together-title {
+  font-size: 20px;
+  line-height: 24px;
+  text-align: left;
+  color: #000;
+}
+
+.together-value {
+  margin-top: 6px;
+  font-size: 36px;
+  line-height: 44px;
+  text-align: center;
+  color: #000;
+}
+
+/* ===== GRID ===== */
 
 .grid {
   display: grid;
@@ -112,6 +129,42 @@ button {
   grid-column: span 2;
   height: 70px;
 }
+
+/* ===== MODAL ===== */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.hidden { display: none; }
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  width: 85%;
+  max-width: 360px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.modal-header button {
+  background: none;
+  border: none;
+  font-size: 22px;
+}
 </style>
 </head>
 
@@ -120,10 +173,23 @@ button {
 <div id="screen"></div>
 <button id="breakPair">Разорвать пару</button>
 
+<!-- MODAL -->
+<div id="dateModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Дата начала</span>
+      <button id="closeModal">✕</button>
+    </div>
+    <input type="date" id="dateInput">
+    <button class="primary" id="saveDate">Сохранить</button>
+  </div>
+</div>
+
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready();
 
+/* ===== FIREBASE ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCXxIQD1aNxBvauiY65MMNWuwuXQYeKUn8",
   authDomain: "mini-app-forcouples.firebaseapp.com",
@@ -138,17 +204,28 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+/* ===== STATE ===== */
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
 const screen = document.getElementById("screen");
 const breakBtn = document.getElementById("breakPair");
 
+let currentPartner = null;
+let currentSince = null;
+
+/* ===== HELPERS ===== */
+
 function normalizeNick(nick) {
   return nick.startsWith("@") ? nick.slice(1) : nick;
 }
 
-function formatDate(ts) {
-  return new Date(ts).toLocaleDateString("ru-RU");
+function plural(n, one, two, five) {
+  n = Math.abs(n) % 100;
+  const n1 = n % 10;
+  if (n > 10 && n < 20) return five;
+  if (n1 > 1 && n1 < 5) return two;
+  if (n1 === 1) return one;
+  return five;
 }
 
 /* ===== ЭКРАНЫ ===== */
@@ -163,16 +240,10 @@ function showStart() {
       <button class="primary" id="save">Подтвердить</button>
     </div>
   `;
-
   document.getElementById("save").onclick = () => {
-    const partner = normalizeNick(
-      document.getElementById("partnerInput").value.trim()
-    );
+    const partner = normalizeNick(document.getElementById("partnerInput").value.trim());
     if (!partner) return;
-    db.ref("pairs/" + selfNick).set({
-      partner,
-      status: "waiting"
-    });
+    db.ref("pairs/" + selfNick).set({ partner, status: "waiting" });
     showWaiting();
   };
 }
@@ -185,7 +256,6 @@ function showWaiting() {
       <button class="secondary" id="cancel">Отменить запрос</button>
     </div>
   `;
-
   document.getElementById("cancel").onclick = () => {
     db.ref("pairs/" + selfNick).remove();
     showStart();
@@ -200,7 +270,6 @@ function showBroken() {
       <button class="primary" id="newLife">Жить новую жизнь</button>
     </div>
   `;
-
   document.getElementById("newLife").onclick = () => {
     db.ref("pairs/" + selfNick).remove();
     showStart();
@@ -209,6 +278,8 @@ function showBroken() {
 
 function showMainMenu(partner, since) {
   breakBtn.style.display = "block";
+  currentPartner = partner;
+  currentSince = since;
 
   screen.innerHTML = `
     <div class="topbar">
@@ -216,9 +287,11 @@ function showMainMenu(partner, since) {
       <div class="currency">💎 3</div>
     </div>
 
-    <div class="card">
-      <h3>Вместе с ${formatDate(since)}</h3>
-      <div id="timeCard" class="time-card"></div>
+    <div id="togetherCard" class="together-card">
+      <div class="together-title">
+        Вместе с <span id="sinceDate"></span>
+      </div>
+      <div id="togetherValue" class="together-value"></div>
     </div>
 
     <div class="grid">
@@ -228,44 +301,66 @@ function showMainMenu(partner, since) {
     </div>
   `;
 
-  startTimeAnimation(since);
+  renderTogetherCard(since);
+  bindTogetherCard();
 }
 
-/* ===== ЛОГИКА ===== */
+/* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
 
-function startTimeAnimation(since) {
-  const card = document.getElementById("timeCard");
+function renderTogetherCard(sinceTimestamp) {
+  const dateEl = document.getElementById("sinceDate");
+  const valueEl = document.getElementById("togetherValue");
 
-  function variants() {
-    const diff = Date.now() - since;
-    const h = Math.floor(diff / 3600000);
-    const d = Math.floor(diff / 86400000);
-    const w = Math.floor(d / 7);
-    const m = Math.floor(d / 30);
-    const y = Math.floor(d / 365);
+  const since = new Date(sinceTimestamp);
+  dateEl.textContent = since.toLocaleDateString("ru-RU");
 
-    const v = [];
-    if (h >= 1) v.push(`${h} часов вместе`);
-    if (d >= 1) v.push(`${d} дней вместе`);
-    if (w >= 1) v.push(`${w} недель вместе`);
-    if (m >= 1) v.push(`${m} месяцев вместе`);
-    if (y >= 1) v.push(`${y} лет вместе`);
-    return v;
-  }
+  const diff = Date.now() - sinceTimestamp;
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
 
-  let i = 0;
-  const list = variants();
-  card.textContent = list[0];
+  let text = "0 часов";
 
-  setInterval(() => {
-    card.style.opacity = 0;
-    setTimeout(() => {
-      i = (i + 1) % list.length;
-      card.textContent = list[i];
-      card.style.opacity = 1;
-    }, 300);
-  }, 3000);
+  if (years >= 1) text = `${years} ${plural(years,"год","года","лет")}`;
+  else if (months >= 1) text = `${months} ${plural(months,"месяц","месяца","месяцев")}`;
+  else if (weeks >= 1) text = `${weeks} ${plural(weeks,"неделя","недели","недель")}`;
+  else if (days >= 1) text = `${days} ${plural(days,"день","дня","дней")}`;
+  else text = `${Math.max(hours,0)} ${plural(hours,"час","часа","часов")}`;
+
+  valueEl.textContent = text;
 }
+
+/* ===== MODAL ===== */
+
+const modal = document.getElementById("dateModal");
+const dateInput = document.getElementById("dateInput");
+
+function bindTogetherCard() {
+  document.getElementById("togetherCard").onclick = () => {
+    dateInput.value = new Date(currentSince).toISOString().split("T")[0];
+    modal.classList.remove("hidden");
+  };
+}
+
+document.getElementById("closeModal").onclick = () => {
+  modal.classList.add("hidden");
+};
+
+document.getElementById("saveDate").onclick = () => {
+  const newDate = new Date(dateInput.value).getTime();
+  if (!newDate) return;
+
+  db.ref("pairs/" + selfNick + "/since").set(newDate);
+  db.ref("pairs/" + currentPartner + "/since").set(newDate);
+
+  modal.classList.add("hidden");
+  currentSince = newDate;
+  renderTogetherCard(newDate);
+};
+
+/* ===== РАЗРЫВ ===== */
 
 breakBtn.onclick = () => {
   db.ref("pairs/" + selfNick).update({ status: "broken" });
@@ -280,14 +375,8 @@ db.ref("pairs/" + selfNick).on("value", snap => {
 
   db.ref("pairs/" + me.partner).once("value").then(s => {
     const partner = s.val();
-
-    if (!partner || partner.partner !== selfNick) {
-      return showWaiting();
-    }
-
-    if (me.status === "broken" || partner.status === "broken") {
-      return showBroken();
-    }
+    if (!partner || partner.partner !== selfNick) return showWaiting();
+    if (me.status === "broken" || partner.status === "broken") return showBroken();
 
     if (!me.since) {
       const now = Date.now();
