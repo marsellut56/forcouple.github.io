@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>For Couple</title>
+<title>Couple App Demo</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -14,117 +14,81 @@ body {
   margin: 0;
   background: #f5f6fa;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
 }
-#screen { padding: 16px; max-width: 420px; margin: auto; overflow: hidden; }
-
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  text-align: center;
+#screen { 
+  position: relative; 
+  width: 100%; 
+  height: 100vh; 
+  overflow: hidden; 
 }
 
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.currency {
-  background: white;
-  padding: 8px 12px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  font-weight: 600;
+/* ===== Сцены ===== */
+.scene {
+  position: absolute;
+  inset: 0;
+  display: none;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
-
-
-/* ===== Grid ===== */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+/* ===== Активная сцена ===== */
+.scene.active {
+  display: block;
 }
+
+/* ===== Тайлы ===== */
 .tile {
   background: white;
   border-radius: 16px;
-  height: 140px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
-.tile-title {
+.tile .title {
   font-size: 12px;
-  opacity: 0.6;
+  opacity: 0.7;
   margin-bottom: 6px;
 }
-.tile-emoji {
-  font-size: 48px;
+.tile .value {
+  font-size: 32px;
+  font-weight: 600;
 }
 
-/* ===== Modal ===== */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.4);
+/* ===== Анимация ===== */
+.time-anim {
+  animation: fadeSlide 0.4s ease;
+}
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Сетки рабочих столов ===== */
+.desktop-container {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+  transition: transform 0.3s ease;
+  height: 100%;
+  width: 100%;
 }
-.hidden { display: none; }
-
-.modal-content {
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  width: 85%;
-  max-width: 360px;
-}
-
-.mood-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
-}
-.mood-btn {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  font-size: 20px;
+.desktop {
+  flex-shrink: 0;
+  width: 100%;
+  display: grid;
+  grid-gap: 12px;
+  padding: 16px;
+  box-sizing: border-box;
 }
 </style>
 </head>
 <body>
 
 <div id="screen"></div>
-
-<!-- Mood modal -->
-<div id="moodModal" class="modal hidden">
-  <div class="modal-content">
-    <h3>Настроение партнёра</h3>
-    <div id="partnerMoods"></div>
-    <hr>
-    <div>Твоё настроение:</div>
-    <div id="yourMood" style="font-size:32px;text-align:center;margin:8px 0;"></div>
-    <div class="mood-buttons">
-      <button class="mood-btn">😭</button>
-      <button class="mood-btn">😢</button>
-      <button class="mood-btn">🤦‍♂️</button>
-      <button class="mood-btn">😊</button>
-      <button class="mood-btn">😩</button>
-      <button class="mood-btn">😄</button>
-      <button class="mood-btn">😍</button>
-      <button class="mood-btn">😌</button>
-    </div>
-    <button onclick="closeMoodModal()">Закрыть</button>
-  </div>
-</div>
 
 <script>
 /* ================== INIT ================== */
@@ -137,241 +101,157 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-const user = tg.initDataUnsafe.user;
-const selfNick = user.username || user.first_name;
-const screen = document.getElementById("screen");
-
-let state = {
-  partner: null,
-  since: null,
-  desktop: 0
+/* ================== GLOBAL STATE ================== */
+const state = {
+  user: tg.initDataUnsafe.user,
+  currentScene: null,
+  desktops: [],
+  currentDesktopIndex: 0
 };
-/* ================== ANIMATION ================== */
-.time-anim {
-  animation: fadeSlide 0.4s ease;
+
+/* ================== SCENE SYSTEM ================== */
+const Scenes = {}; // registry всех сцен
+
+function registerScene(id, scene) {
+  Scenes[id] = scene;
 }
 
-@keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
+function showScene(id) {
+  // скрываем текущую сцену
+  if(state.currentScene) {
+    state.currentScene.el.classList.remove("active");
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  state.currentScene = Scenes[id];
+  state.currentScene.el.classList.add("active");
+  if(state.currentScene.onShow) state.currentScene.onShow();
 }
 
-  
+/* ================== TILE SYSTEM ================== */
+const Tiles = {}; // registry тайлов
 
-/* ================== SCRIPTS ================== */
-function plural(n, one, two, five) {
-  n = Math.abs(n) % 100;
-  const n1 = n % 10;
-  if (n > 10 && n < 20) return five;
-  if (n1 > 1 && n1 < 5) return two;
-  if (n1 === 1) return one;
-  return five;
-}
-
-function buildTimeVariants(since) {
-  const diff = Date.now() - since;
-
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(hours / 24);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
-
-  const arr = [];
-
-  if (years >= 1) arr.push(`${years} ${plural(years,"год","года","лет")}`);
-  if (months >= 1) arr.push(`${months} ${plural(months,"месяц","месяца","месяцев")}`);
-  if (weeks >= 1) arr.push(`${weeks} ${plural(weeks,"неделя","недели","недель")}`);
-  if (days >= 1) arr.push(`${days} ${plural(days,"день","дня","дней")}`);
-
-  arr.push(`${hours} ${plural(hours,"час","часа","часов")}`);
-
-  return arr;
-}
-
-
-
-  
-
-/* ================== TILE REGISTRY ================== */
-
-const Tiles = {};
-
-function registerTile(id, config){
+function registerTile(id, config) {
   Tiles[id] = config;
 }
 
-
-  /* ================== TILE TOGETHER ================== */
-
-let togetherInterval = null;
-
-registerTile("together", {
-  render(container) {
-    if (!state.since) {
-      container.innerHTML = `
-        <div class="tile-title">Вместе с</div>
-        <div class="tile-emoji">—</div>
-      `;
-      return;
-    }
-
-    container.innerHTML = `
-      <div class="tile-title">
-        Вместе с ${new Date(state.since).toLocaleDateString("ru-RU")}
-      </div>
-      <div class="tile-emoji" id="togetherValue">0 часов</div>
-    `;
-
-    this.startAnimation();
-  },
-
-  startAnimation() {
-    const valueEl = document.getElementById("togetherValue");
-    if (!valueEl) return;
-
-    if (togetherInterval) {
-      clearInterval(togetherInterval);
-      togetherInterval = null;
-    }
-
-    const variants = buildTimeVariants(state.since);
-    let index = 0;
-
-    const renderValue = () => {
-      valueEl.classList.remove("time-anim");
-      void valueEl.offsetWidth;
-      valueEl.textContent = variants[index];
-      valueEl.classList.add("time-anim");
-      index = (index + 1) % variants.length;
-    };
-
-    renderValue();
-    togetherInterval = setInterval(renderValue, 3000);
-  },
-
-  onClick() {
-    // позже здесь будет модалка редактирования даты
-    console.log("Открыть настройки даты");
+// Универсальный метод создания DOM тайла
+function createTileDOM(tileConfig) {
+  const div = document.createElement("div");
+  div.className = "tile";
+  if(tileConfig.size) {
+    // size = {rows: 1, cols: 1} - для grid
+    div.style.gridRowEnd = `span ${tileConfig.size.rows}`;
+    div.style.gridColumnEnd = `span ${tileConfig.size.cols}`;
   }
-});
-
-
-
-/* ================== MOOD TILE ================== */
-
-registerTile("mood", {
-  render(container){
-    container.innerHTML = `
-      <div class="tile-title">Настроение партнёра</div>
-      <div class="tile-emoji" id="moodEmoji">❔</div>
-    `;
-    updateMoodTile();
-  },
-  onClick(){
-    openMoodModal();
-  }
-});
-
-function updateMoodTile(){
-  if(!state.partner) return;
-  db.ref(`moods/${state.partner}/current`).once("value").then(snap=>{
-    const el = document.getElementById("moodEmoji");
-    if(el) el.textContent = snap.val() || "❔";
-  });
+  tileConfig.render(div); // рендерим контент
+  div.onclick = () => {
+    if(tileConfig.onClick) tileConfig.onClick();
+  };
+  return div;
 }
 
-/* ================== MODALS ================== */
+/* ================== DEMO TILE 1: Вместе ================== */
+registerTile("together", {
+  size: {rows: 1, cols: 2}, // 2x1 тайл
+  render(container) {
+    container.innerHTML = `
+      <div class="title">Вместе с</div>
+      <div class="value time-anim" id="togetherValue">0 часов</div>
+    `;
+    // demo анимация: увеличиваем цифру каждый интервал
+    let val = 0;
+    this.interval = setInterval(() => {
+      val += 1;
+      const el = container.querySelector(".value");
+      el.textContent = val + " часов";
+      el.classList.remove("time-anim");
+      void el.offsetWidth;
+      el.classList.add("time-anim");
+    }, 2000);
+  },
+  onClick() {
+    alert("Открываем подробности вместе...");
+  },
+  onUnmount() {
+    clearInterval(this.interval);
+  }
+});
 
-function openMoodModal(){
-  if(!state.partner) return;
-  document.getElementById("moodModal").classList.remove("hidden");
+/* ================== DEMO TILE 2: Настроение ================== */
+registerTile("mood", {
+  size: {rows: 1, cols: 1},
+  render(container) {
+    container.innerHTML = `
+      <div class="title">Настроение партнёра</div>
+      <div class="value">😊</div>
+    `;
+  },
+  onClick() {
+    alert("Открываем окно настроения...");
+  }
+});
 
-  db.ref(`moods/${state.partner}`)
-    .orderByChild("timestamp")
-    .limitToLast(3)
-    .once("value")
-    .then(snap=>{
-      const data = snap.val() || {};
-      document.getElementById("partnerMoods").innerHTML =
-        Object.values(data)
-          .filter(m=>m.timestamp)
-          .sort((a,b)=>b.timestamp-a.timestamp)
-          .map(m=>`<div>${m.emoji} ${new Date(m.timestamp).toLocaleString()}</div>`)
-          .join("");
+/* ================== MAIN SCENE ================== */
+registerScene("main", {
+  el: (() => {
+    const div = document.createElement("div");
+    div.className = "scene";
+    document.getElementById("screen").appendChild(div);
+    return div;
+  })(),
+  desktops: [
+    ["together", "mood"],
+    ["mood", "together"]
+  ],
+  onShow() {
+    this.renderDesktops();
+  },
+  renderDesktops() {
+    this.el.innerHTML = '';
+    const container = document.createElement("div");
+    container.className = "desktop-container";
+    container.style.width = `${this.desktops.length * 100}%`;
+
+    this.desktopEls = [];
+
+    this.desktops.forEach((desktop, i) => {
+      const desktopDiv = document.createElement("div");
+      desktopDiv.className = "desktop";
+      desktopDiv.style.gridTemplateColumns = "repeat(2, 1fr)";
+      desktopDiv.style.gridAutoRows = "140px";
+      desktop.forEach(tileId => {
+        const tileConfig = Tiles[tileId];
+        const tileEl = createTileDOM(tileConfig);
+        desktopDiv.appendChild(tileEl);
+      });
+      container.appendChild(desktopDiv);
+      this.desktopEls.push(desktopDiv);
     });
 
-  db.ref(`moods/${selfNick}/current`).once("value").then(s=>{
-    document.getElementById("yourMood").textContent = s.val() || "❔";
-  });
-}
+    this.el.appendChild(container);
 
-function closeMoodModal(){
-  document.getElementById("moodModal").classList.add("hidden");
-}
-
-document.querySelectorAll(".mood-btn").forEach(btn=>{
-  btn.onclick = ()=>{
-    const emoji = btn.textContent;
-    const ref = db.ref(`moods/${selfNick}`);
-    ref.push({emoji, timestamp: Date.now()});
-    ref.child("current").set(emoji);
-    document.getElementById("yourMood").textContent = emoji;
-  };
-});
-
-/* ================== DESKTOP ================== */
-
-const desktops = [
-  ["together", "mood"]
-];
-
-function renderDesktop(){
-  screen.innerHTML = `
-    <div class="topbar">
-      <div class="currency">💰 120</div>
-      <div class="currency">💎 3</div>
-    </div>
-
-
-
-    <div class="grid" id="grid"></div>
-  `;
-
-
-
-  const grid = document.getElementById("grid");
-  desktops[state.desktop].forEach(id=>{
-    const tile = Tiles[id];
-    const div = document.createElement("div");
-    div.className = "tile";
-    tile.render(div);
-    div.onclick = tile.onClick;
-    grid.appendChild(div);
-  });
-}
-
-
-
-/* ================== LOAD ================== */
-
-db.ref("pairs/"+selfNick).on("value", snap=>{
-  const me = snap.val();
-  if(!me || !me.partner){
-    screen.innerHTML = `<div class="card">Нет пары</div>`;
-    return;
+    // swipe/desktop switching
+    let startX = 0;
+    let currentTranslate = 0;
+    container.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+    });
+    container.addEventListener("touchmove", e => {
+      const dx = e.touches[0].clientX - startX;
+      container.style.transform = `translateX(${currentTranslate + dx}px)`;
+    });
+    container.addEventListener("touchend", e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      if(dx < -50 && state.currentDesktopIndex < this.desktops.length-1) state.currentDesktopIndex++;
+      if(dx > 50 && state.currentDesktopIndex > 0) state.currentDesktopIndex--;
+      currentTranslate = -state.currentDesktopIndex * window.innerWidth;
+      container.style.transform = `translateX(${currentTranslate}px)`;
+    });
   }
-  state.partner = me.partner;
-  state.since = me.since || Date.now();
-  renderDesktop();
 });
+
+/* ================== START ================== */
+showScene("main");
+
 </script>
 </body>
 </html>
-
