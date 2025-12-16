@@ -186,6 +186,33 @@ button {
   </div>
 </div>
 
+
+<!-- MODAL для настроений -->
+<div id="moodModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Настроение партнера</span>
+      <button id="closeMoodModal">✕</button>
+    </div>
+    <div id="partnerMoods" style="margin-bottom:16px;"></div>
+    <div style="margin-bottom:8px;">Твое текущее настроение:</div>
+    <div id="yourMood" style="font-size: 32px; text-align:center; margin-bottom:16px;"></div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+      <button class="moodBtn">😭</button>
+      <button class="moodBtn">😢</button>
+      <button class="moodBtn">🤦‍♂️</button>
+      <button class="moodBtn">😊</button>
+      <button class="moodBtn">😩</button>
+      <button class="moodBtn">😄</button>
+      <button class="moodBtn">😍</button>
+      <button class="moodBtn">😌</button>
+    </div>
+  </div>
+</div>
+
+
+
+  
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready();
@@ -213,9 +240,18 @@ let currentPartner = null;
 let currentSince = null;
 let animInterval = null;
 
+/* ===== РАБОЧИЕ СТОЛЫ ===== */
 let currentDesktop = 0;
 let desktops = []; // Массив рабочих столов
 
+desktops[0].unshift({
+  type: "tile",
+  label: "Настроение",
+  onClick: showMoodModal
+});
+
+
+  
 /* ===== HELPERS ===== */
 
 function normalizeNick(nick) { return nick.startsWith("@") ? nick.slice(1) : nick; }
@@ -227,6 +263,12 @@ function plural(n, one, two, five) {
   if (n1 === 1) return one;
   return five;
 }
+
+
+/* ===== ЭКРАНЫ ===== */
+
+
+
 
 /* ===== ЭКРАНЫ ===== */
 
@@ -313,6 +355,75 @@ function startTogetherAnimation(since) {
   render();
   animInterval = setInterval(render, 3000);
 }
+
+/* ===== ПЛАШКИ ФУНКЦИИ ===== */
+
+
+/* ===== НАСТРОЕНИЕ ===== */
+const moodModal = document.getElementById("moodModal");
+const closeMoodModalBtn = document.getElementById("closeMoodModal");
+const partnerMoodsDiv = document.getElementById("partnerMoods");
+const yourMoodDiv = document.getElementById("yourMood");
+const moodButtons = document.querySelectorAll(".moodBtn");
+
+function showMoodModal() {
+  moodModal.classList.remove("hidden");
+
+  // Загружаем последние 3 настроения партнера
+  db.ref(`moods/${currentPartner}`)
+    .orderByChild("timestamp")
+    .limitToLast(3)
+    .once("value")
+    .then(snapshot => {
+      const moods = snapshot.val() || {};
+      const list = Object.values(moods)
+        .filter(m => m.timestamp) // исключаем поле current
+        .sort((a,b)=>b.timestamp-a.timestamp);
+      partnerMoodsDiv.innerHTML = list.map(m => 
+        `<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span>${m.emoji}</span>
+          <span style="font-size:12px; color:#555;">${new Date(m.timestamp).toLocaleString()}</span>
+        </div>`
+      ).join("");
+    });
+
+  // Загружаем твое текущее настроение
+  db.ref(`moods/${selfNick}/current`).once("value").then(snap=>{
+    yourMoodDiv.textContent = snap.val() || "❔";
+  });
+}
+
+// Смена твоего настроения с ограничением 3 последних
+moodButtons.forEach(btn => {
+  btn.onclick = () => {
+    const emoji = btn.textContent;
+    const moodRef = db.ref(`moods/${selfNick}`);
+    // добавляем новое настроение
+    moodRef.push({ emoji, timestamp: Date.now() }).then(() => {
+      // оставляем только 3 последних
+      moodRef.orderByChild("timestamp").once("value", snap => {
+        const moods = snap.val();
+        const keys = Object.keys(moods).filter(k => k !== "current");
+        if (keys.length > 3) {
+          const sortedKeys = keys.sort((a,b)=>moods[a].timestamp - moods[b].timestamp);
+          const toRemove = sortedKeys.slice(0, keys.length - 3);
+          toRemove.forEach(k => moodRef.child(k).remove());
+        }
+      });
+    });
+    // обновляем текущее
+    moodRef.child("current").set(emoji);
+    yourMoodDiv.textContent = emoji;
+  };
+});
+
+closeMoodModalBtn.onclick = () => moodModal.classList.add("hidden");
+
+
+
+
+
+  
 
 /* ===== MAIN MENU & DESKTOPS ===== */
 
