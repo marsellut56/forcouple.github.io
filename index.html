@@ -8,13 +8,26 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
-body { font-family: sans-serif; padding: 16px; }
+body { font-family: sans-serif; padding: 16px; position: relative; }
 input, button { padding: 8px; font-size: 16px; margin: 4px 0; width: 100%; }
+#breakPair { 
+  position: absolute; 
+  top: 16px; 
+  right: 16px; 
+  padding: 6px 10px; 
+  font-size: 14px; 
+  background: #ff4d4f; 
+  color: white; 
+  border: none; 
+  border-radius: 4px;
+  cursor: pointer;
+}
 </style>
 </head>
 <body>
 
 <div id="screen"></div>
+<button id="breakPair" style="display:none;">Разорвать пару</button>
 
 <script>
 const tg = window.Telegram.WebApp;
@@ -37,11 +50,13 @@ const db = firebase.database();
 // ===== Переменные =====
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
-const pairCode = "default_pair"; // одна пара, можно расширить позже
+const pairCode = "default_pair"; // одна пара
 const screen = document.getElementById('screen');
+const breakBtn = document.getElementById('breakPair');
 
-// ===== Функции экранов =====
+// ===== Функции =====
 function showStartScreen() {
+  breakBtn.style.display = 'none';
   screen.innerHTML = `
     <h2>Привет, ${selfNick}</h2>
     <p>Введите ник вашего партнёра:</p>
@@ -56,7 +71,7 @@ function showStartScreen() {
     db.ref('pairs/' + pairCode + '/partner').set(partnerNick);
   };
 
-  // Слушаем изменения в Firebase
+  db.ref('pairs/' + pairCode).off(); // убираем предыдущие слушатели
   db.ref('pairs/' + pairCode).on('value', snapshot => {
     const data = snapshot.val();
     if (!data) return;
@@ -65,10 +80,17 @@ function showStartScreen() {
 }
 
 function showPairScreen(nick1, nick2) {
+  breakBtn.style.display = 'block';
   screen.innerHTML = `
     <h2>Парочка готова! 💖</h2>
     <p>${nick1} + ${nick2}</p>
   `;
+}
+
+// ===== Разрыв пары =====
+breakBtn.onclick = () => {
+  db.ref('pairs/' + pairCode).remove();
+  showStartScreen();
 }
 
 // ===== Старт =====
