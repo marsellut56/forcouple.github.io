@@ -141,20 +141,28 @@ class MoodTile extends Tile {
   /* ===== Класс PulseTile ===== */
 class PulsingTile extends Tile {
   constructor() {
-    super({title: '🔥', w:1, h:1});
+    super({title: '', w:1, h:1, renderContent: (el) => {
+      this.flame = document.createElement('div');
+      this.flame.textContent = '🔥';
+      this.flame.style.fontSize = '32px';
+      this.flame.style.transition = 'transform 0.1s linear';
+      el.appendChild(this.flame);
+    }});
     this.scale = 1;
     this.growing = true;
   }
 
   tick(deltaTime) {
+    // медленная плавная пульсация
+    const speed = 0.0003; // регулируем скорость пульсации
     if(this.growing) {
-      this.scale += 0.01 * deltaTime;
+      this.scale += speed * deltaTime;
       if(this.scale >= 1.2) this.growing = false;
     } else {
-      this.scale -= 0.01 * deltaTime;
+      this.scale -= speed * deltaTime;
       if(this.scale <= 1) this.growing = true;
     }
-    this.el.style.transform = `scale(${this.scale})`;
+    this.flame.style.transform = `scale(${this.scale})`;
   }
 }
 
@@ -178,14 +186,11 @@ const desktopWrapper = document.getElementById('desktopWrapper');
 const desktops = [];
 
 // Первый рабочий стол - заполненный
-const desk1 = document.createElement('div');
-desk1.className = 'desktop';
-createDemoTiles().forEach(tile=>desk1.appendChild(tile.el));
+const demoTiles = createDemoTiles();
+desk1.tiles = demoTiles;
+desk1.tiles.forEach(tile => desk1.appendChild(tile.el));
 desktopWrapper.appendChild(desk1);
 desktops.push(desk1);
-
-desk1.tiles = createDemoTiles();
-desk1.tiles.forEach(tile => desk1.appendChild(tile.el));
 
 // Второй рабочий стол - частично заполненный
 const desk2 = document.createElement('div');
