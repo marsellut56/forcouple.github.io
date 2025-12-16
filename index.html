@@ -10,186 +10,30 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-/* ===== BODY ===== */
-body {
-  margin: 0;
-  background: #e5e5e5;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #1c1c1c;
-}
-
-#screen {
-  padding: 16px;
-  max-width: 420px;
-  margin: auto;
-}
-
-/* ===== CARDS ===== */
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  text-align: center;
-}
-
-input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-  margin-top: 10px;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  font-size: 16px;
-  margin-top: 12px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-.primary { background: #0088cc; color: white; }
-.secondary { background: #f0f0f0; color: #1c1c1c; }
-.danger { background: #ff4d4f; color: white; }
-
-/* ===== TOPBAR ===== */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.currency {
-  background: white;
-  padding: 8px 12px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  font-weight: 600;
-}
-
-/* ===== TOGETHER CARD ===== */
-.together-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 16px 18px;
-  margin-bottom: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  transition: 0.2s;
-}
-
-.together-card:hover {
-  background: #f5f7fa;
-}
-
-.together-title {
-  font-size: 18px;
-  line-height: 22px;
-  text-align: left;
-  color: #1c1c1c;
-}
-
-.together-value {
-  margin-top: 6px;
-  font-size: 32px;
-  line-height: 40px;
-  text-align: center;
-  color: #0088cc;
-  position: relative;
-  overflow: hidden;
-}
-
-/* ===== ANIMATION ===== */
-.time-anim {
-  animation: fadeSlide 0.45s ease;
-}
-
-@keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ===== GRID ===== */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.tile {
-  background: white;
-  border-radius: 16px;
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.tile-wide {
-  grid-column: span 2;
-  height: 70px;
-}
-
-/* ===== MODAL ===== */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.hidden { display: none; }
-
-.modal-content {
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  width: 85%;
-  max-width: 360px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 18px;
-  margin-bottom: 12px;
-}
-
-.modal-header button {
-  background: none;
-  border: none;
-  font-size: 22px;
-}
-
-/* ===== CONFIRMATION ===== */
-.confirmation {
-  margin-top: 12px;
-  display: none;
-  text-align: center;
-}
-
-.confirmation p {
-  margin-bottom: 12px;
-}
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f6fa; }
+#screen { padding:16px; max-width:420px; margin:auto; }
+.card { background:white; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 6px 16px rgba(0,0,0,0.08); text-align:center; }
+input { width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; font-size:16px; margin-top:10px; }
+button { width:100%; padding:14px; border-radius:12px; border:none; font-size:16px; margin-top:12px; cursor:pointer; }
+.primary { background:#74b9ff; color:white; } .secondary { background:#dfe6e9; color:#2d3436; }
+.danger { background:#ff7675; color:white; }
+.topbar { display:flex; justify-content:space-between; margin-bottom:14px; }
+.currency { background:white; padding:8px 12px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); font-weight:600; }
+.together-card { background:#d9d9d9; border-radius:25px; padding:16px 18px; margin-bottom:20px; cursor:pointer; }
+.together-title { font-size:20px; line-height:24px; text-align:left; color:#000; }
+.together-value { margin-top:6px; font-size:36px; line-height:44px; text-align:center; color:#000; position:relative; overflow:hidden; }
+.time-anim { animation:fadeSlide 0.45s ease; }
+@keyframes fadeSlide { from {opacity:0; transform:translateY(6px);} to {opacity:1; transform:translateY(0);} }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.tile { background:white; border-radius:16px; height:140px; display:flex; align-items:center; justify-content:center; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.08); cursor:pointer; }
+.tile-wide { grid-column:span 2; height:70px; }
+.modal { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:100; }
+.hidden { display:none; }
+.modal-content { background:white; border-radius:20px; padding:20px; width:85%; max-width:360px; }
+.modal-header { display:flex; justify-content:space-between; align-items:center; font-size:18px; margin-bottom:12px; }
+.modal-header button { background:none; border:none; font-size:22px; }
 </style>
 </head>
-
 <body>
 
 <div id="screen"></div>
@@ -203,236 +47,220 @@ button:hover {
     </div>
     <input type="date" id="dateInput">
     <button class="primary" id="saveDate">Сохранить</button>
-    <button class="danger" id="breakRelationship">Разорвать отношения</button>
-    <div class="confirmation" id="confirmBreak">
-      <p>Вы уверены, что хотите разорвать отношения?</p>
-      <button class="danger" id="confirmYes">Да</button>
-      <button class="secondary" id="confirmNo">Нет</button>
-    </div>
+    <button class="danger" id="breakPairModal">Разорвать отношения</button>
   </div>
 </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.ready();
+const tg = window.Telegram.WebApp; tg.ready();
 
 /* ===== FIREBASE ===== */
 const firebaseConfig = {
-  apiKey: "AIzaSyCXxIQD1aNxBvauiY65MMNWuwuXQYeKUn8",
-  authDomain: "mini-app-forcouples.firebaseapp.com",
-  databaseURL: "https://mini-app-forcouples-default-rtdb.firebaseio.com",
-  projectId: "mini-app-forcouples",
-  storageBucket: "mini-app-forcouples.firebasestorage.app",
-  messagingSenderId: "597378655994",
-  appId: "1:597378655994:web:82c08f4e0a81a6894ecb43"
+  apiKey:"AIzaSyCXxIQD1aNxBvauiY65MMNWuwuXQYeKUn8",
+  authDomain:"mini-app-forcouples.firebaseapp.com",
+  databaseURL:"https://mini-app-forcouples-default-rtdb.firebaseio.com",
+  projectId:"mini-app-forcouples",
+  storageBucket:"mini-app-forcouples.firebasestorage.app",
+  messagingSenderId:"597378655994",
+  appId:"1:597378655994:web:82c08f4e0a81a6894ecb43"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 /* ===== STATE ===== */
 const user = tg.initDataUnsafe.user;
-const selfNick = user.username || user.first_name;
+const selfNick = user.username||user.first_name;
 const screen = document.getElementById("screen");
+const modal = document.getElementById("dateModal");
+const dateInput = document.getElementById("dateInput");
 
-let currentPartner = null;
-let currentSince = null;
-let animInterval = null;
+let currentPartner=null;
+let currentSince=null;
+let animInterval=null;
+let desktops=[]; // массив рабочих столов
+let currentDesktop=0;
 
 /* ===== HELPERS ===== */
-function normalizeNick(nick) { return nick.startsWith("@") ? nick.slice(1) : nick; }
+function normalizeNick(nick){return nick.startsWith("@")?nick.slice(1):nick;}
+function plural(n,one,two,five){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return five;if(n1>1&&n1<5)return two;if(n1===1)return one;return five;}
 
-function plural(n, one, two, five) {
-  n = Math.abs(n) % 100;
-  const n1 = n % 10;
-  if (n > 10 && n < 20) return five;
-  if (n1 > 1 && n1 < 5) return two;
-  if (n1 === 1) return one;
-  return five;
+/* ===== TILE CLASS ===== */
+class Tile{
+  constructor(id,type,title,content,onClick){
+    this.id=id; this.type=type; this.title=title; this.content=content; this.onClickHandler=onClick;
+  }
+  render(){
+    const div=document.createElement("div");
+    div.id=this.id; div.classList.add("tile"); if(this.type==="wide") div.classList.add("tile-wide");
+    div.innerHTML=`<strong>${this.title}</strong><br>${this.content}`;
+    div.onclick=()=>this.onClickHandler(this);
+    return div;
+  }
+  update(content){
+    this.content=content;
+    const el=document.getElementById(this.id);
+    if(el) el.innerHTML=`<strong>${this.title}</strong><br>${this.content}`;
+  }
 }
 
-/* ===== SCREENS ===== */
-function showStart() {
-  screen.innerHTML = `
-    <div class="card">
-      <h2>Привет, @${selfNick}</h2>
-      <p>Введи ник партнёра</p>
-      <input id="partnerInput" placeholder="nickname">
-      <button class="primary" id="save">Подтвердить</button>
-    </div>
-  `;
-  document.getElementById("save").onclick = () => {
-    const partner = normalizeNick(document.getElementById("partnerInput").value.trim());
-    if (!partner) return;
-    db.ref("pairs/" + selfNick).set({ partner, status: "waiting" });
-    showWaiting();
-  };
-}
-
-function showWaiting() {
-  screen.innerHTML = `
-    <div class="card">
-      <h3>Ожидание партнёра ⏳</h3>
-      <button class="secondary" id="cancel">Отменить запрос</button>
-    </div>
-  `;
-  document.getElementById("cancel").onclick = () => {
-    db.ref("pairs/" + selfNick).remove();
-    showStart();
-  };
-}
-
-function showBroken() {
-  screen.innerHTML = `
-    <div class="card">
-      <h2>Пара разорвана 😢</h2>
-      <button class="primary" id="newLife">Жить новую жизнь</button>
-    </div>
-  `;
-  document.getElementById("newLife").onclick = () => {
-    db.ref("pairs/" + selfNick).remove();
-    showStart();
-  };
-}
-
-function showMainMenu(partner, since) {
-  currentPartner = partner;
-  currentSince = since;
-
-  screen.innerHTML = `
-    <div class="topbar">
-      <div class="currency">💰 120</div>
-      <div class="currency">💎 3</div>
-    </div>
-
-    <div id="togetherCard" class="together-card">
-      <div class="together-title">
-        Вместе с <span id="sinceDate"></span>
-      </div>
-      <div id="togetherValue" class="together-value"></div>
-    </div>
-
-    <div class="grid">
-      <div class="tile">Плашка</div>
-      <div class="tile">Плашка</div>
-      <div class="tile tile-wide">Большая плашка</div>
-    </div>
-  `;
-
-  startTogetherAnimation(since);
-  bindTogetherCard();
-}
-
-/* ===== TOGETHER CARD ===== */
-function buildTimeVariants(since) {
-  const diff = Date.now() - since;
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(hours / 24);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
-
-  const arr = [];
-  if (years >= 1) arr.push(`${years} ${plural(years,"год","года","лет")}`);
-  if (months >= 1) arr.push(`${months} ${plural(months,"месяц","месяца","месяцев")}`);
-  if (weeks >= 1) arr.push(`${weeks} ${plural(weeks,"неделя","недели","недель")}`);
-  if (days >= 1) arr.push(`${days} ${plural(days,"день","дня","дней")}`);
+/* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
+function buildTimeVariants(since){
+  const diff=Date.now()-since;
+  const hours=Math.floor(diff/3600000);
+  const days=Math.floor(hours/24);
+  const weeks=Math.floor(days/7);
+  const months=Math.floor(days/30);
+  const years=Math.floor(days/365);
+  const arr=[];
+  if(years>=1) arr.push(`${years} ${plural(years,"год","года","лет")}`);
+  if(months>=1) arr.push(`${months} ${plural(months,"месяц","месяца","месяцев")}`);
+  if(weeks>=1) arr.push(`${weeks} ${plural(weeks,"неделя","недели","недель")}`);
+  if(days>=1) arr.push(`${days} ${plural(days,"день","дня","дней")}`);
   arr.push(`${Math.max(hours,0)} ${plural(hours,"час","часа","часов")}`);
   return arr;
 }
 
-function startTogetherAnimation(since) {
-  const dateEl = document.getElementById("sinceDate");
-  const valueEl = document.getElementById("togetherValue");
-
-  dateEl.textContent = new Date(since).toLocaleDateString("ru-RU");
-
-  const variants = buildTimeVariants(since);
-  let index = 0;
-
-  if (animInterval) clearInterval(animInterval);
-
-  function render() {
-    valueEl.classList.remove("time-anim");
-    void valueEl.offsetWidth;
-    valueEl.textContent = variants[index];
+function startTogetherAnimation(since){
+  const dateEl=document.getElementById("sinceDate");
+  const valueEl=document.getElementById("togetherValue");
+  dateEl.textContent=new Date(since).toLocaleDateString("ru-RU");
+  const variants=buildTimeVariants(since);
+  let index=0;
+  if(animInterval) clearInterval(animInterval);
+  function render(){
+    valueEl.classList.remove("time-anim"); void valueEl.offsetWidth;
+    valueEl.textContent=variants[index];
     valueEl.classList.add("time-anim");
-    index = (index + 1) % variants.length;
+    index=(index+1)%variants.length;
   }
-
   render();
-  animInterval = setInterval(render, 3000);
+  animInterval=setInterval(render,3000);
 }
 
-/* ===== MODAL ===== */
-const modal = document.getElementById("dateModal");
-const dateInput = document.getElementById("dateInput");
-const breakBtnModal = document.getElementById("breakRelationship");
-const confirmBox = document.getElementById("confirmBreak");
-const confirmYes = document.getElementById("confirmYes");
-const confirmNo = document.getElementById("confirmNo");
-
-function bindTogetherCard() {
-  document.getElementById("togetherCard").onclick = () => {
-    dateInput.value = new Date(currentSince).toISOString().split("T")[0];
-    modal.classList.remove("hidden");
-    confirmBox.style.display = "none";
+/* ===== SCREENS ===== */
+function showStart(){
+  screen.innerHTML=`<div class="card">
+    <h2>Привет, @${selfNick}</h2>
+    <p>Введи ник партнёра</p>
+    <input id="partnerInput" placeholder="nickname">
+    <button class="primary" id="save">Подтвердить</button>
+  </div>`;
+  document.getElementById("save").onclick=()=>{
+    const partner=normalizeNick(document.getElementById("partnerInput").value.trim());
+    if(!partner) return;
+    db.ref("pairs/"+selfNick).set({partner,status:"waiting"});
+    showWaiting();
   };
 }
 
-document.getElementById("closeModal").onclick = () => {
+function showWaiting(){
+  screen.innerHTML=`<div class="card">
+    <h3>Ожидание партнёра ⏳</h3>
+    <button class="secondary" id="cancel">Отменить запрос</button>
+  </div>`;
+  document.getElementById("cancel").onclick=()=>{
+    db.ref("pairs/"+selfNick).remove();
+    showStart();
+  };
+}
+
+function showBroken(){
+  screen.innerHTML=`<div class="card">
+    <h2>Пара разорвана 😢</h2>
+    <button class="primary" id="newLife">Жить новую жизнь</button>
+  </div>`;
+  document.getElementById("newLife").onclick=()=>{
+    db.ref("pairs/"+selfNick).remove();
+    showStart();
+  };
+}
+
+/* ===== MAIN MENU ===== */
+function showMainMenu(partner,since){
+  currentPartner=partner; currentSince=since;
+  screen.innerHTML=`<div class="topbar">
+    <div class="currency">💰 120</div>
+    <div class="currency">💎 3</div>
+  </div>
+  <div id="togetherCard" class="together-card">
+    <div class="together-title">Вместе с <span id="sinceDate"></span></div>
+    <div id="togetherValue" class="together-value"></div>
+  </div>
+  <div id="tilesGrid" class="grid"></div>`;
+
+  startTogetherAnimation(since);
+  bindTogetherCard();
+
+  // создаем плитки
+  const tile1=new Tile("tile1","square","Плашка 1","Контент 1",(t)=>alert("Нажата "+t.title));
+  const tile2=new Tile("tile2","square","Плашка 2","Контент 2",(t)=>alert("Нажата "+t.title));
+  const tile3=new Tile("tile3","square","Плашка 3","Контент 3",(t)=>alert("Нажата "+t.title));
+  const tile4=new Tile("tile4","square","Плашка 4","Контент 4",(t)=>alert("Нажата "+t.title));
+  const tile5=new Tile("tile5","wide","Горизонтальная","Широкий контент",(t)=>alert("Нажата "+t.title));
+
+  desktops=[[tile1,tile2,tile3,tile4,tile5]];
+  currentDesktop=0;
+  renderDesktop(currentDesktop);
+}
+
+function renderDesktop(index){
+  const grid=document.getElementById("tilesGrid");
+  grid.innerHTML="";
+  desktops[index].forEach(tile=>grid.appendChild(tile.render()));
+}
+
+// свайпы через клавиши (можно заменить на touch)
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft") currentDesktop=Math.max(0,currentDesktop-1);
+  if(e.key==="ArrowRight") currentDesktop=Math.min(desktops.length-1,currentDesktop+1);
+  renderDesktop(currentDesktop);
+});
+
+/* ===== MODAL ===== */
+function bindTogetherCard(){
+  document.getElementById("togetherCard").onclick=()=>{
+    dateInput.value=new Date(currentSince).toISOString().split("T")[0];
+    modal.classList.remove("hidden");
+  };
+}
+
+document.getElementById("closeModal").onclick=()=>modal.classList.add("hidden");
+document.getElementById("saveDate").onclick=()=>{
+  const newDate=new Date(dateInput.value).getTime();
+  if(!newDate) return;
+  db.ref("pairs/"+selfNick+"/since").set(newDate);
+  db.ref("pairs/"+currentPartner+"/since").set(newDate);
   modal.classList.add("hidden");
-};
-
-/* Сохранение даты */
-document.getElementById("saveDate").onclick = () => {
-  const newDate = new Date(dateInput.value).getTime();
-  if (!newDate) return;
-
-  db.ref("pairs/" + selfNick + "/since").set(newDate);
-  db.ref("pairs/" + currentPartner + "/since").set(newDate);
-
-  modal.classList.add("hidden");
-  currentSince = newDate;
+  currentSince=newDate;
   startTogetherAnimation(newDate);
 };
 
-/* Разорвать через модальное окно */
-breakBtnModal.onclick = () => {
-  confirmBox.style.display = "block";
+// разрыв через модальное окно
+document.getElementById("breakPairModal").onclick=()=>{
+  if(confirm("Вы уверены, что хотите разорвать пару?")){
+    db.ref("pairs/"+selfNick).update({status:"broken"});
+    modal.classList.add("hidden");
+    showBroken();
+  }
 };
 
-/* Подтверждение */
-confirmYes.onclick = () => {
-  db.ref("pairs/" + selfNick).update({ status: "broken" });
-  modal.classList.add("hidden");
-  showBroken();
-};
-
-confirmNo.onclick = () => {
-  confirmBox.style.display = "none";
-};
-
-/* ===== ЗАГРУЗКА ===== */
-db.ref("pairs/" + selfNick).on("value", snap => {
-  const me = snap.val();
-  if (!me || !me.partner) return showStart();
-
-  db.ref("pairs/" + me.partner).once("value").then(s => {
-    const partner = s.val();
-    if (!partner || partner.partner !== selfNick) return showWaiting();
-    if (me.status === "broken" || partner.status === "broken") return showBroken();
-
-    if (!me.since) {
-      const now = Date.now();
-      db.ref("pairs/" + selfNick).update({ status: "active", since: now });
-      db.ref("pairs/" + me.partner).update({ status: "active", since: now });
+/* ===== LOAD DATA ===== */
+db.ref("pairs/"+selfNick).on("value",snap=>{
+  const me=snap.val();
+  if(!me||!me.partner) return showStart();
+  db.ref("pairs/"+me.partner).once("value").then(s=>{
+    const partner=s.val();
+    if(!partner||partner.partner!==selfNick) return showWaiting();
+    if(me.status==="broken"||partner.status==="broken") return showBroken();
+    if(!me.since){
+      const now=Date.now();
+      db.ref("pairs/"+selfNick).update({status:"active",since:now});
+      db.ref("pairs/"+me.partner).update({status:"active",since:now});
       return;
     }
-
-    showMainMenu(me.partner, me.since);
+    showMainMenu(me.partner,me.since);
   });
 });
 </script>
-
 </body>
 </html>
