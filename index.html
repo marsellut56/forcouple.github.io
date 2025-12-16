@@ -104,6 +104,25 @@ button {
   line-height: 44px;
   text-align: center;
   color: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== АНИМАЦИЯ ===== */
+
+.time-anim {
+  animation: fadeSlide 0.45s ease;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== GRID ===== */
@@ -197,8 +216,7 @@ const firebaseConfig = {
   projectId: "mini-app-forcouples",
   storageBucket: "mini-app-forcouples.firebasestorage.app",
   messagingSenderId: "597378655994",
-  appId: "1:597378655994:web:82c08f4e0a81a6894ecb43",
-  measurementId: "G-6DM9GWM2QR"
+  appId: "1:597378655994:web:82c08f4e0a81a6894ecb43"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -212,6 +230,7 @@ const breakBtn = document.getElementById("breakPair");
 
 let currentPartner = null;
 let currentSince = null;
+let animInterval = null;
 
 /* ===== HELPERS ===== */
 
@@ -301,35 +320,53 @@ function showMainMenu(partner, since) {
     </div>
   `;
 
-  renderTogetherCard(since);
+  startTogetherAnimation(since);
   bindTogetherCard();
 }
 
 /* ===== ПЛАШКА "ВМЕСТЕ С" ===== */
 
-function renderTogetherCard(sinceTimestamp) {
-  const dateEl = document.getElementById("sinceDate");
-  const valueEl = document.getElementById("togetherValue");
+function buildTimeVariants(since) {
+  const diff = Date.now() - since;
 
-  const since = new Date(sinceTimestamp);
-  dateEl.textContent = since.toLocaleDateString("ru-RU");
-
-  const diff = Date.now() - sinceTimestamp;
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(hours / 24);
   const weeks = Math.floor(days / 7);
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
 
-  let text = "0 часов";
+  const arr = [];
 
-  if (years >= 1) text = `${years} ${plural(years,"год","года","лет")}`;
-  else if (months >= 1) text = `${months} ${plural(months,"месяц","месяца","месяцев")}`;
-  else if (weeks >= 1) text = `${weeks} ${plural(weeks,"неделя","недели","недель")}`;
-  else if (days >= 1) text = `${days} ${plural(days,"день","дня","дней")}`;
-  else text = `${Math.max(hours,0)} ${plural(hours,"час","часа","часов")}`;
+  if (years >= 1) arr.push(`${years} ${plural(years,"год","года","лет")}`);
+  if (months >= 1) arr.push(`${months} ${plural(months,"месяц","месяца","месяцев")}`);
+  if (weeks >= 1) arr.push(`${weeks} ${plural(weeks,"неделя","недели","недель")}`);
+  if (days >= 1) arr.push(`${days} ${plural(days,"день","дня","дней")}`);
+  arr.push(`${Math.max(hours,0)} ${plural(hours,"час","часа","часов")}`);
 
-  valueEl.textContent = text;
+  return arr;
+}
+
+function startTogetherAnimation(since) {
+  const dateEl = document.getElementById("sinceDate");
+  const valueEl = document.getElementById("togetherValue");
+
+  dateEl.textContent = new Date(since).toLocaleDateString("ru-RU");
+
+  const variants = buildTimeVariants(since);
+  let index = 0;
+
+  if (animInterval) clearInterval(animInterval);
+
+  function render() {
+    valueEl.classList.remove("time-anim");
+    void valueEl.offsetWidth;
+    valueEl.textContent = variants[index];
+    valueEl.classList.add("time-anim");
+    index = (index + 1) % variants.length;
+  }
+
+  render();
+  animInterval = setInterval(render, 3000);
 }
 
 /* ===== MODAL ===== */
@@ -357,7 +394,7 @@ document.getElementById("saveDate").onclick = () => {
 
   modal.classList.add("hidden");
   currentSince = newDate;
-  renderTogetherCard(newDate);
+  startTogetherAnimation(newDate);
 };
 
 /* ===== РАЗРЫВ ===== */
