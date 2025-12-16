@@ -3,189 +3,181 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Главный экран тайлов</title>
+<title>Главный экран</title>
 <style>
-  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#f5f6fa; overflow:hidden;}
-  #topbar { height:10vh; background:#fff; display:flex; justify-content:space-between; align-items:center; padding:0 16px; box-shadow:0 2px 4px rgba(0,0,0,0.1);}
-  #desktopContainer { position:relative; height:70vh; overflow:hidden; }
-  #desktopWrapper { display:flex; transition:transform 0.3s ease; height:100%; }
-  .desktop { position:relative; flex:0 0 100%; height:100%; }
-  #bottombar { height:20vh; background:#fff; box-shadow:0 -2px 4px rgba(0,0,0,0.1);}
-  .tile { position:absolute; border-radius:12px; background:#ccc; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; transition:all 0.2s ease; }
-  .time-anim { animation: fadeSlide 0.4s ease; }
-  @keyframes fadeSlide { from {opacity:0; transform:translateY(6px);} to {opacity:1; transform:translateY(0);} }
+body, html { margin:0; padding:0; height:100%; width:100%; font-family: sans-serif; overflow: hidden; }
+#app { display:flex; flex-direction: column; height:100%; width:100%; }
+
+/* Верхняя панель */
+.topbar {
+  flex: 0 0 10%;
+  background: #f5f5f5;
+  display:flex;
+  justify-content: space-around;
+  align-items: center;
+  font-weight: bold;
+}
+
+/* Середина - рабочие столы */
+.middle {
+  flex: 0 0 70%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Рабочие столы свайпаются */
+.desktopWrapper {
+  display: flex;
+  height:100%;
+  transition: transform 0.3s ease;
+}
+
+/* Каждый рабочий стол - сетка 4x8 */
+.desktop {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: calc(100% / 8); /* 8 рядов */
+  gap: 8px;
+  flex-shrink:0;
+  width:100%;
+  box-sizing: border-box;
+  padding: 4px;
+}
+
+/* Тайлы */
+.tile {
+  background: #fff;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Нижняя панель */
+.bottombar {
+  flex: 0 0 20%;
+  background: #eee;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
 </style>
 </head>
 <body>
+<div id="app">
+  <div class="topbar">
+    <div>💰 120</div>
+    <div>💎 3</div>
+  </div>
 
-<div id="topbar">
-  <div>💰 120</div>
-  <div>💎 3</div>
-</div>
+  <div class="middle">
+    <div class="desktopWrapper" id="desktopWrapper">
+      <!-- Рабочие столы добавятся через JS -->
+    </div>
+  </div>
 
-<div id="desktopContainer">
-  <div id="desktopWrapper"></div>
-</div>
-
-<div id="bottombar">
-  <!-- Будущее меню -->
+  <div class="bottombar">
+    Меню
+  </div>
 </div>
 
 <script>
-const unitCols = 4;  // ширина рабочего стола в юнитах
-const unitRows = 8;  // высота рабочего стола в юнитах
-let unitSize = 0;    // размер одного юнита в px, рассчитывается динамически
-const desktopWrapper = document.getElementById('desktopWrapper');
-let currentDesktop = 0;
-
-// Базовый класс тайла
+/* ===== Класс тайла ===== */
 class Tile {
-  constructor({id, w=1, h=1, color="#ccc", onClick=null}) {
-    this.id = id;
-    this.w = w;
-    this.h = h;
-    this.color = color;
-    this.onClick = onClick || (()=>{});
-    this.el = null;
-  }
-
-  render(c, r, unit, parent) {
-    const div = document.createElement('div');
-    div.className = 'tile';
-    div.style.left = `${c*unit}px`;
-    div.style.top = `${r*unit}px`;
-    div.style.width = `${this.w*unit}px`;
-    div.style.height = `${this.h*unit}px`;
-    div.style.background = this.color;
-    div.textContent = this.id;
-    div.onclick = this.onClick;
-    parent.appendChild(div);
-    this.el = div;
-  }
-
-  animate(content) {
-    if(!this.el) return;
-    this.el.textContent = content;
-    this.el.classList.remove('time-anim');
-    void this.el.offsetWidth;
-    this.el.classList.add('time-anim');
+  constructor({title='', w=1, h=1, onClick=null, renderContent=null}) {
+    this.title = title;
+    this.w = w; // кол-во колонок
+    this.h = h; // кол-во рядов
+    this.onClick = onClick;
+    this.renderContent = renderContent;
+    this.el = document.createElement('div');
+    this.el.className = 'tile';
+    this.el.style.gridColumn = `span ${w}`;
+    this.el.style.gridRow = `span ${h}`;
+    this.el.onclick = () => { if(this.onClick) this.onClick(this); }
+    if(renderContent) renderContent(this.el);
+    else this.el.textContent = title;
   }
 }
 
-// Наследник MoodTile
-class MoodTile extends Tile {
-  constructor({id, color="#ffeb3b", onClick=null}) {
-    super({id, w:1, h:1, color, onClick});
-    this.emoji = "❔";
-  }
-
-  render(c, r, unit, parent) {
-    super.render(c, r, unit, parent);
-    if(this.el){
-      this.el.style.fontSize = "48px";
-      this.el.textContent = this.emoji;
-    }
-  }
-
-  setEmoji(emoji){
-    this.emoji = emoji;
-    if(this.el) this.el.textContent = emoji;
-  }
+/* ===== Демо тайлы ===== */
+function createDemoTiles() {
+  return [
+    new Tile({title:'2x1', w:2, h:1, onClick:()=>alert('2x1 clicked')}),
+    new Tile({title:'2x2', w:2, h:2, onClick:()=>alert('2x2 clicked')}),
+    new Tile({title:'4x1', w:4, h:1, onClick:()=>alert('4x1 clicked')}),
+    new Tile({title:'1x2', w:1, h:2, onClick:()=>alert('1x2 clicked')}),
+    new Tile({title:'1x1', w:1, h:1, onClick:()=>alert('1x1 clicked')}),
+    new Tile({title:'1x1b', w:1, h:1}),
+    new Tile({title:'2x1b', w:2, h:1}),
+    new Tile({title:'1x2b', w:1, h:2}),
+  ];
 }
 
-// Демонстрационный тайл
-class DemoTile extends Tile {
-  constructor({id, w, h, color="#90caf9"}) {
-    super({id, w, h, color});
-  }
-}
+/* ===== Создаем рабочие столы ===== */
+const desktopWrapper = document.getElementById('desktopWrapper');
+const desktops = [];
 
-// Функция для генерации сетки тайлов на рабочем столе
-function fillDesktop(tiles) {
-  const positions = Array.from({length:unitRows},()=>Array(unitCols).fill(null));
-  const desktopEl = document.createElement('div');
-  desktopEl.className = 'desktop';
+// Первый рабочий стол - заполненный
+const desk1 = document.createElement('div');
+desk1.className = 'desktop';
+createDemoTiles().forEach(tile=>desk1.appendChild(tile.el));
+desktopWrapper.appendChild(desk1);
+desktops.push(desk1);
 
-  for(const tile of tiles){
-    let placed = false;
-    for(let r=0;r<unitRows;r++){
-      for(let c=0;c<unitCols;c++){
-        if(canPlace(tile,w=c,h=r,positions)){
-          placeTile(tile,c,r,positions,desktopEl);
-          placed = true;
-          break;
-        }
-      }
-      if(placed) break;
-    }
-    if(!placed) console.warn('Тайл не вмещается:', tile.id);
-  }
+// Второй рабочий стол - частично заполненный
+const desk2 = document.createElement('div');
+desk2.className = 'desktop';
+desk2.appendChild(new Tile({title:'2x2', w:2,h:2}).el);
+desk2.appendChild(new Tile({title:'1x1', w:1,h:1}).el);
+desktopWrapper.appendChild(desk2);
+desktops.push(desk2);
 
-  desktopWrapper.appendChild(desktopEl);
-}
+/* ===== Свайпы между рабочими столами ===== */
+let currentDesktop = 0;
+let startX = 0;
+let isDragging = false;
 
-// Проверка возможности размещения тайла
-function canPlace(tile,w,h,positions){
-  if(w+tile.w>unitCols || h+tile.h>unitRows) return false;
-  for(let r=h;r<h+tile.h;r++){
-    for(let c=w;c<w+tile.w;c++){
-      if(positions[r][c]) return false;
-    }
-  }
-  return true;
-}
-
-// Размещение тайла в массив и DOM
-function placeTile(tile,w,h,positions,parent){
-  for(let r=h;r<h+tile.h;r++){
-    for(let c=w;c<w+tile.w;c++){
-      positions[r][c]=tile.id;
-    }
-  }
-  tile.render(w,h,unitSize,parent);
-}
-
-// Расчёт размера юнита
-function calcUnit(){
-  const desktopHeight = document.getElementById('desktopContainer').clientHeight;
-  const desktopWidth = document.getElementById('desktopContainer').clientWidth;
-  unitSize = Math.min(desktopWidth/unitCols, desktopHeight/unitRows);
-}
-
-// Демо: два рабочих стола
-const desktop1 = [
-  new MoodTile({id:"Mood"}),
-  new DemoTile({id:"2x1", w:2, h:1}),
-  new DemoTile({id:"2x2", w:2, h:2}),
-  new DemoTile({id:"1x2", w:1, h:2}),
-  new DemoTile({id:"1x1"}),
-  new DemoTile({id:"1x1"})
-];
-
-const desktop2 = [
-  new DemoTile({id:"2x1-A", w:2, h:1}),
-  new DemoTile({id:"1x2-B", w:1, h:2}),
-  new DemoTile({id:"1x1-C"}),
-];
-
-// Инициализация
-function init(){
-  calcUnit();
-  fillDesktop(desktop1);
-  fillDesktop(desktop2);
-  updateDesktop();
-}
-init();
-
-// Свайпы (упрощённо через клики для примера)
-document.getElementById('desktopContainer').onclick = ()=>{
-  currentDesktop = (currentDesktop+1)%desktopWrapper.children.length;
-  updateDesktop();
-};
-function updateDesktop(){
+desktopWrapper.addEventListener('mousedown', e=>{
+  startX = e.clientX;
+  isDragging = true;
+});
+desktopWrapper.addEventListener('mousemove', e=>{
+  if(!isDragging) return;
+  const dx = e.clientX - startX;
+  desktopWrapper.style.transform = `translateX(${-currentDesktop*100 + dx/desktopWrapper.offsetWidth*100}%)`;
+});
+desktopWrapper.addEventListener('mouseup', e=>{
+  if(!isDragging) return;
+  isDragging = false;
+  const dx = e.clientX - startX;
+  if(dx < -50 && currentDesktop < desktops.length-1) currentDesktop++;
+  if(dx > 50 && currentDesktop > 0) currentDesktop--;
   desktopWrapper.style.transform = `translateX(-${currentDesktop*100}%)`;
-}
+});
 
+/* ===== Для сенсорных экранов ===== */
+desktopWrapper.addEventListener('touchstart', e=>{
+  startX = e.touches[0].clientX;
+  isDragging = true;
+});
+desktopWrapper.addEventListener('touchmove', e=>{
+  if(!isDragging) return;
+  const dx = e.touches[0].clientX - startX;
+  desktopWrapper.style.transform = `translateX(${-currentDesktop*100 + dx/desktopWrapper.offsetWidth*100}%)`;
+});
+desktopWrapper.addEventListener('touchend', e=>{
+  if(!isDragging) return;
+  isDragging = false;
+  const dx = e.changedTouches[0].clientX - startX;
+  if(dx < -50 && currentDesktop < desktops.length-1) currentDesktop++;
+  if(dx > 50 && currentDesktop > 0) currentDesktop--;
+  desktopWrapper.style.transform = `translateX(-${currentDesktop*100}%)`;
+});
 </script>
 </body>
 </html>
