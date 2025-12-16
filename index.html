@@ -148,28 +148,32 @@ function createDemoTiles(){
   ];
 }
 
-const desktopWrapper = document.getElementById('desktopWrapper');
 const desktops = [];
+const desktopWrapper = document.getElementById('desktopWrapper');
 
-// первый рабочий стол
-const desk1 = document.createElement('div'); desk1.className='desktop';
-desk1.tiles=createDemoTiles();
-desk1.tiles.forEach(t=>desk1.appendChild(t.el));
+// Первый рабочий стол
+const desk1 = document.createElement('div');
+desk1.className = 'desktop';
+desk1.tiles = createDemoTiles();
+desk1.tiles.forEach(t => desk1.appendChild(t.el));
 desktopWrapper.appendChild(desk1);
 desktops.push(desk1);
 
-// второй рабочий стол
-const desk2 = document.createElement('div'); desk2.className='desktop'; desk2.tiles=[];
-const tileA=new Tile({title:'2x2', w:2,h:2});
-const tileB=new PulsingTile();
-desk2.tiles.push(tileA,tileB);
-desk2.tiles.forEach(t=>desk2.appendChild(t.el));
+// Второй рабочий стол
+const desk2 = document.createElement('div');
+desk2.className = 'desktop';
+desk2.tiles = [];
+const tileA = new Tile({title:'2x2', w:2, h:2});
+const tileB = new PulsingTile();
+desk2.tiles.push(tileA, tileB);
+desk2.tiles.forEach(t => desk2.appendChild(t.el));
 desktopWrapper.appendChild(desk2);
 desktops.push(desk2);
 
-// Устанавливаем ширину wrapper = количество рабочих столов * 100%
+// Подгоняем ширину wrapper и столов
 desktopWrapper.style.width = `${desktops.length*100}%`;
-desktops.forEach(d=>d.style.width=`${100/desktops.length}%`);
+desktops.forEach(d => d.style.width = `${100/desktops.length}%`);
+
 
 // свайп
 let currentDesktop=0, startX=0, isDragging=false;
