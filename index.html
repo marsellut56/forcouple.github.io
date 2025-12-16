@@ -67,15 +67,29 @@ function showStartScreen() {
   document.getElementById('savePartner').onclick = () => {
     const partnerNick = document.getElementById('partnerInput').value.trim();
     if (!partnerNick) return alert("Введите ник партнёра!");
-    db.ref('pairs/' + pairCode + '/self').set(selfNick);
-    db.ref('pairs/' + pairCode + '/partner').set(partnerNick);
+    db.ref('pairs/' + pairCode).set({
+      self: selfNick,
+      partner: partnerNick,
+      status: 'active'
+    });
+    showLoadingScreen();
   };
+}
 
-  db.ref('pairs/' + pairCode).off(); // убираем предыдущие слушатели
+function showLoadingScreen() {
+  breakBtn.style.display = 'none';
+  screen.innerHTML = `<p>Загрузка... ⏳</p>`;
+
   db.ref('pairs/' + pairCode).on('value', snapshot => {
     const data = snapshot.val();
-    if (!data) return;
-    if (data.self && data.partner) showPairScreen(data.self, data.partner);
+    if (!data) return showStartScreen();
+    
+    if (data.status === 'active' && data.self && data.partner) {
+      showPairScreen(data.self, data.partner);
+    }
+    if (data.status === 'broken') {
+      showBrokenScreen();
+    }
   });
 }
 
@@ -87,10 +101,22 @@ function showPairScreen(nick1, nick2) {
   `;
 }
 
+function showBrokenScreen() {
+  breakBtn.style.display = 'none';
+  screen.innerHTML = `
+    <h2>Пара разорвана 😢</h2>
+    <button id="newLife">Жить новую жизнь</button>
+  `;
+  document.getElementById('newLife').onclick = () => {
+    db.ref('pairs/' + pairCode).remove();
+    showStartScreen();
+  };
+}
+
 // ===== Разрыв пары =====
 breakBtn.onclick = () => {
-  db.ref('pairs/' + pairCode).remove();
-  showStartScreen();
+  db.ref('pairs/' + pairCode).update({ status: 'broken' });
+  showBrokenScreen();
 }
 
 // ===== Старт =====
