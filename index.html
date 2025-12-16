@@ -22,13 +22,14 @@ tg.ready();
 
 // ===== Firebase =====
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://PROJECT_ID.firebaseio.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyCXxIQD1aNxBvauiY65MMNWuwuXQYeKUn8",
+  authDomain: "mini-app-forcouples.firebaseapp.com",
+  databaseURL: "https://mini-app-forcouples-default-rtdb.firebaseio.com",
+  projectId: "mini-app-forcouples",
+  storageBucket: "mini-app-forcouples.firebasestorage.app",
+  messagingSenderId: "597378655994",
+  appId: "1:597378655994:web:82c08f4e0a81a6894ecb43",
+  measurementId: "G-6DM9GWM2QR"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -37,7 +38,7 @@ const db = firebase.database();
 const user = tg.initDataUnsafe.user;
 const selfNick = user.username || user.first_name;
 const urlParams = new URLSearchParams(window.location.search);
-let pairCode = urlParams.get('pair'); // приходит от бота
+let pairCode = urlParams.get('pair');
 const screen = document.getElementById('screen');
 
 // ===== Функции экранов =====
@@ -58,9 +59,19 @@ function createPair() {
 
   screen.innerHTML = `
     <h2>Ссылка для партнёра</h2>
-    <p>Отправьте партнёру ссылку через бота.</p>
+    <p>Скопируйте и отправьте партнёру через Telegram:</p>
+    <p id="link"></p>
+    <button id="copyLink">Скопировать ссылку</button>
     <p>Ожидаем партнёра...</p>
   `;
+
+  const link = window.location.origin + window.location.pathname + '?pair=' + pairCode;
+  document.getElementById('link').innerText = link;
+
+  document.getElementById('copyLink').onclick = () => {
+    navigator.clipboard.writeText(link);
+    alert('Ссылка скопирована!');
+  };
 
   // Слушаем статус пары
   db.ref('pairs/' + pairCode).on('value', snapshot => {
@@ -69,11 +80,6 @@ function createPair() {
     if (data.pairStatus === 'confirmed') showPairScreen(data.selfNick, data.partnerNick);
     if (data.pairStatus === 'cancelled') showStartScreen();
   });
-
-  // Генерируем ссылку на бота
-  const botUsername = "YourBotUsername"; // заменить на своего бота
-  const link = `https://t.me/${botUsername}?start=${pairCode}`;
-  console.log("Ссылка для партнёра:", link);
 }
 
 function showJoinScreen() {
@@ -112,7 +118,7 @@ function showPairScreen(nick1, nick2) {
 
 // ===== Начало =====
 if (pairCode) {
-  // Пришёл по ссылке от бота
+  // Партнёр пришёл по ссылке
   showJoinScreen();
 } else {
   // Новый пользователь
