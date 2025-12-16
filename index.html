@@ -18,6 +18,7 @@ button:hover { opacity: 0.9; }
 .waiting { background: #ffeaa7; }
 .active { background: #55efc4; }
 .broken { background: #fab1a0; }
+.cancelBtn { background:#dfe6e9; color:#2d3436; }
 </style>
 </head>
 <body>
@@ -48,6 +49,10 @@ const screen = document.getElementById('screen');
 const breakBtn = document.getElementById('breakPair');
 
 // ===== Функции =====
+function normalizeNick(nick) {
+  return nick.startsWith('@') ? nick.slice(1) : nick;
+}
+
 function checkPair() {
   screen.innerHTML = `<div class="card waiting"><p>Загрузка... ⏳</p></div>`;
   breakBtn.style.display = 'none';
@@ -64,11 +69,13 @@ function checkPair() {
     db.ref('pairs/' + partnerNick).once('value').then(s => {
       const partnerData = s.val();
 
+      // Ожидание партнёра
       if (!partnerData || partnerData.partner !== selfNick) {
         showWaitingScreen();
         return;
       }
 
+      // Пара активна
       if (myData.status !== 'active') {
         db.ref('pairs/' + selfNick).update({ status: 'active' });
         db.ref('pairs/' + partnerNick).update({ status: 'active' });
@@ -94,7 +101,7 @@ function showStartScreen() {
     </div>
   `;
   document.getElementById('savePartner').onclick = () => {
-    const partnerNick = document.getElementById('partnerInput').value.trim();
+    let partnerNick = normalizeNick(document.getElementById('partnerInput').value.trim());
     if (!partnerNick) return alert("Введите ник партнёра!");
     db.ref('pairs/' + selfNick).set({ partner: partnerNick, status: 'waiting' });
     showWaitingScreen();
@@ -103,12 +110,21 @@ function showStartScreen() {
 
 function showWaitingScreen() {
   breakBtn.style.display = 'none';
-  screen.innerHTML = `<div class="card waiting"><p>Ожидание партнёра… ⏳</p></div>`;
+  screen.innerHTML = `
+    <div class="card waiting">
+      <p>Ожидание партнёра… ⏳</p>
+      <button id="cancelRequest" class="cancelBtn">Отменить запрос</button>
+    </div>
+  `;
+  document.getElementById('cancelRequest').onclick = () => {
+    db.ref('pairs/' + selfNick + '/partner').remove();
+    showStartScreen();
+  };
 }
 
 function showPairScreen(nick1, nick2) {
   breakBtn.style.display = 'block';
-  screen.innerHTML = `<div class="card active"><h2>Парочка готова! 💖</h2><p>${nick1} + ${nick2}</p></div>`;
+  screen.innerHTML = `<div class="card active"><h2>Парочка готова! 💖</h2><p>@${nick1} + @${nick2}</p></div>`;
 }
 
 function showBrokenScreen() {
