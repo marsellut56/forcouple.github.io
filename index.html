@@ -62,16 +62,17 @@ button { width: 100%; padding: 14px; border-radius: 12px; border: none; font-siz
     <div id="partnerMoods" style="margin-bottom:16px;"></div>
     <div style="margin-bottom:8px;">Твое текущее настроение:</div>
     <div id="yourMood" style="font-size: 32px; text-align:center; margin-bottom:16px;"></div>
-    <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
-      <button class="moodBtn">😭</button>
-      <button class="moodBtn">😢</button>
-      <button class="moodBtn">🤦‍♂️</button>
-      <button class="moodBtn">😊</button>
-      <button class="moodBtn">😩</button>
-      <button class="moodBtn">😄</button>
-      <button class="moodBtn">😍</button>
-      <button class="moodBtn">😌</button>
-    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">😭</button>
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">😢</button>
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">🤦‍♂️</button>
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">😊</button>
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">😩</button>
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">😄</button>
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">😍</button>
+      <button class="moodBtn" style="width:36px;height:36px;padding:0;font-size:20px;">😌</button>
+</div>
+
   </div>
 </div>
 
@@ -92,7 +93,11 @@ let currentDesktop = 0;
 let desktops = [[]];
 
 // ===== Плашки =====
-desktops[0].push({type:"tile", label:"Настроение", onClick:showMoodModal});
+desktops[0].push({
+  type: "moodTile", // специальный тип
+  label: "❔",       // запасной вариант
+  onClick: showMoodModal
+});
 
 /* ===== HELPERS ===== */
 function normalizeNick(nick){return nick.startsWith("@")?nick.slice(1):nick;}
@@ -148,17 +153,26 @@ function showMoodModal(){
   });
   db.ref(`moods/${selfNick}/current`).once("value").then(snap=>{yourMoodDiv.textContent=snap.val()||"❔";});
 }
-moodButtons.forEach(btn=>{btn.onclick=()=>{
-  const emoji=btn.textContent;
-  const moodRef=db.ref(`moods/${selfNick}`);
-  moodRef.push({emoji,timestamp:Date.now()}).then(()=>{
-    moodRef.orderByChild("timestamp").once("value",snap=>{
-      const moods=snap.val(); const keys=Object.keys(moods).filter(k=>k!=="current");
-      if(keys.length>3){const sortedKeys=keys.sort((a,b)=>moods[a].timestamp-moods[b].timestamp); const toRemove=sortedKeys.slice(0,keys.length-3); toRemove.forEach(k=>moodRef.child(k).remove());}
+moodButtons.forEach(btn => {
+  btn.onclick = () => {
+    const emoji = btn.textContent;
+    const moodRef = db.ref(`moods/${selfNick}`);
+    moodRef.push({ emoji, timestamp: Date.now() }).then(() => {
+      moodRef.orderByChild("timestamp").once("value", snap => {
+        const moods = snap.val();
+        const keys = Object.keys(moods).filter(k => k !== "current");
+        if(keys.length > 3){
+          const sortedKeys = keys.sort((a,b)=>moods[a].timestamp - moods[b].timestamp);
+          const toRemove = sortedKeys.slice(0, keys.length - 3);
+          toRemove.forEach(k => moodRef.child(k).remove());
+        }
+      });
     });
-  });
-  moodRef.child("current").set(emoji); yourMoodDiv.textContent=emoji;
-};});
+    moodRef.child("current").set(emoji);
+    yourMoodDiv.textContent = emoji;
+  };
+});
+
 document.getElementById("closeMoodModal").onclick=()=>moodModal.classList.add("hidden");
 
 /* ===== MAIN MENU & DESKTOPS ===== */
@@ -166,7 +180,19 @@ function showMainMenu(partner,since){if(!partner)return; currentPartner=partner;
 function renderDesktop(index){
   const desktop=desktops[index]; if(!desktop) return;
   screen.innerHTML=`<div class="topbar"><div class="currency">💰 120</div><div class="currency">💎 3</div></div><div id="togetherCard" class="together-card"><div class="together-title">Вместе с <span id="sinceDate"></span></div><div id="togetherValue" class="together-value"></div></div><div class="grid" id="grid"></div>`;
-  const grid=document.getElementById("grid"); desktop.forEach(tile=>{const div=document.createElement("div"); div.className=tile.type==="tile-wide"?"tile tile-wide":"tile"; div.textContent=tile.label; div.onclick=()=>{if(currentPartner)tile.onClick();}; grid.appendChild(div);});
+  const grid=document.getElementById("grid");
+  desktop.forEach(tile=>{const div=document.createElement("div"); 
+                         div.className=tile.type==="tile-wide"?"tile tile-wide":"tile";
+                             if(tile.type === "moodTile" && currentPartner){
+                                // Берем текущее настроение партнёра
+                                db.ref(`moods/${currentPartner}/current`).once("value").then(snap=>{
+                                  div.textContent = snap.val() || "❔";
+                                });
+                              } else {
+                                div.textContent = tile.label;
+                              }
+                         div.onclick=()=>{if(currentPartner)tile.onClick();};
+                         grid.appendChild(div);});
   startTogetherAnimation(currentSince); bindTogetherCard();
 }
 
