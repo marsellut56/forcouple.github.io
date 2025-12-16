@@ -102,6 +102,9 @@ class Tile {
     if(renderContent) renderContent(this.el);
     else this.el.textContent = title;
   }
+  tick(deltaTime) {
+    // базовый Tile ничего не делает
+  }
 }
 
   /* ===== Класс MoodTile ===== */
@@ -135,6 +138,25 @@ class MoodTile extends Tile {
   }
 }
 
+  /* ===== Класс PulseTile ===== */
+class PulsingTile extends Tile {
+  constructor() {
+    super({title: '🔥', w:1, h:1});
+    this.scale = 1;
+    this.growing = true;
+  }
+
+  tick(deltaTime) {
+    if(this.growing) {
+      this.scale += 0.01 * deltaTime;
+      if(this.scale >= 1.2) this.growing = false;
+    } else {
+      this.scale -= 0.01 * deltaTime;
+      if(this.scale <= 1) this.growing = true;
+    }
+    this.el.style.transform = `scale(${this.scale})`;
+  }
+}
 
 /* ===== Демо тайлы ===== */
 function createDemoTiles() {
@@ -162,13 +184,30 @@ createDemoTiles().forEach(tile=>desk1.appendChild(tile.el));
 desktopWrapper.appendChild(desk1);
 desktops.push(desk1);
 
+desk1.tiles = createDemoTiles();
+desk1.tiles.forEach(tile => desk1.appendChild(tile.el));
+
 // Второй рабочий стол - частично заполненный
 const desk2 = document.createElement('div');
 desk2.className = 'desktop';
-desk2.appendChild(new Tile({title:'2x2', w:2,h:2}).el);
-desk2.appendChild(new Tile({title:'1x1', w:1,h:1}).el);
+desk2.tiles = []; // массив тайлов на этом рабочем столе
+
+// Создаём тайлы
+const tileA = new Tile({title:'2x2', w:2, h:2});
+const tileB = new PulsingTile({title:'1x1', w:1, h:1});
+
+// Добавляем в DOM
+desk2.appendChild(tileA.el);
+desk2.appendChild(tileB.el);
+
+// Добавляем в массив тайлов
+desk2.tiles.push(tileA);
+desk2.tiles.push(tileB);
+
+// Добавляем рабочий стол в wrapper и список рабочих столов
 desktopWrapper.appendChild(desk2);
 desktops.push(desk2);
+
 
 
 
@@ -214,6 +253,23 @@ desktopWrapper.addEventListener('touchend', e=>{
   if(dx > 50 && currentDesktop > 0) currentDesktop--;
   desktopWrapper.style.transform = `translateX(-${currentDesktop*100}%)`;
 });
+
+function animationLoop(timestamp) {
+  if(!animationLoop.last) animationLoop.last = timestamp;
+  const deltaTime = timestamp - animationLoop.last;
+  animationLoop.last = timestamp;
+
+  const currentDesk = desktops[currentDesktop];
+  if(currentDesk) {
+    currentDesk.tiles.forEach(tile => tile.tick(deltaTime));
+  }
+
+  requestAnimationFrame(animationLoop);
+}
+
+// запускаем
+requestAnimationFrame(animationLoop);
+
 </script>
 </body>
 </html>
