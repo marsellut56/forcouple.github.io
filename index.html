@@ -3,77 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swipe Test</title>
+<title>Desktops</title>
 
 <style>
 html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  font-family: sans-serif;
 }
 
-.middle {
-  height: 100%;
-  overflow: hidden;
-}
-
-.wrapper {
+#app {
   display: flex;
+  flex-direction: column;
   height: 100%;
-  width: 200%; /* КЛЮЧЕВО */
-  transition: transform 0.3s ease;
 }
 
-.desktop {
-  width: 50%; /* 100% / 2 */
-  height: 100%;
-  flex-shrink: 0;
+/* Верх */
+.topbar {
+  height: 10%;
+  background: #f3f3f3;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 32px;
+  justify-content: space-around;
 }
 
-.d1 { background: #ffdede; }
-.d2 { background: #dedfff; }
+/* Центр */
+.middle {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Wrapper */
+.desktopWrapper {
+  display: flex;
+  height: 100%;
+  transition: transform 0.35s ease;
+}
+
+/* Desktop */
+.desktop {
+  flex-shrink: 0;
+  height: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 8px;
+}
+
+/* Tile */
+.tile {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Нижняя панель */
+.bottombar {
+  height: 10%;
+  background: #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Точки */
+.dots {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #bbb;
+}
+
+.dot.active {
+  background: #333;
+}
 </style>
 </head>
 
 <body>
 
-<div class="middle">
-  <div id="wrapper" class="wrapper">
-    <div class="desktop d1">DESKTOP 1</div>
-    <div class="desktop d2">DESKTOP 2</div>
+<div id="app">
+  <div class="topbar">
+    <div>💰120</div>
+    <div>💎3</div>
+  </div>
+
+  <div class="middle">
+    <div id="desktopWrapper" class="desktopWrapper"></div>
+  </div>
+
+  <div class="bottombar">
+    <div id="dots" class="dots"></div>
   </div>
 </div>
 
 <script>
-const wrapper = document.getElementById('wrapper');
-let current = 0;
-let startX = null;
-
-function go(index) {
-  current = Math.max(0, Math.min(1, index));
-  wrapper.style.transform = `translateX(-${current * 50}%)`;
+/* ===== Tile ===== */
+class Tile {
+  constructor({ title, w = 1, h = 1 }) {
+    this.el = document.createElement('div');
+    this.el.className = 'tile';
+    this.el.style.gridColumn = `span ${w}`;
+    this.el.style.gridRow = `span ${h}`;
+    this.el.textContent = title;
+  }
 }
 
-document.addEventListener('touchstart', e => {
-  startX = e.touches[0].clientX;
+/* ===== Создание рабочих столов ===== */
+const wrapper = document.getElementById('desktopWrapper');
+const dotsEl = document.getElementById('dots');
+
+const desktops = [];
+
+// DESKTOP 1
+const d1 = document.createElement('div');
+d1.className = 'desktop';
+[
+  new Tile({ title:'2x1', w:2 }),
+  new Tile({ title:'2x2', w:2, h:2 }),
+  new Tile({ title:'4x1', w:4 }),
+  new Tile({ title:'1x2', h:2 }),
+  new Tile({ title:'1x1' }),
+  new Tile({ title:'1x1' }),
+].forEach(t => d1.appendChild(t.el));
+desktops.push(d1);
+
+// DESKTOP 2
+const d2 = document.createElement('div');
+d2.className = 'desktop';
+[
+  new Tile({ title:'2x2', w:2, h:2 }),
+  new Tile({ title:'1x1' }),
+].forEach(t => d2.appendChild(t.el));
+desktops.push(d2);
+
+/* ===== Монтирование ===== */
+const count = desktops.length;
+wrapper.style.width = `${count * 100}%`;
+
+desktops.forEach(d => {
+  d.style.width = `${100 / count}%`;
+  wrapper.appendChild(d);
 });
 
-document.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - startX;
-  if (dx < -60) go(current + 1);
-  if (dx >  60) go(current - 1);
-});
+/* ===== Точки ===== */
+let current = 0;
 
-document.addEventListener('mousedown', e => startX = e.clientX);
-document.addEventListener('mouseup', e => {
-  const dx = e.clientX - startX;
+function renderDots() {
+  dotsEl.innerHTML = '';
+  desktops.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === current ? ' active' : '');
+    dotsEl.appendChild(dot);
+  });
+}
+
+function go(index) {
+  current = Math.max(0, Math.min(desktops.length - 1, index));
+  wrapper.style.transform = `translateX(-${current * (100 / count)}%)`;
+  renderDots();
+}
+
+renderDots();
+
+/* ===== Свайп ===== */
+let startX = null;
+
+function onStart(x) {
+  startX = x;
+}
+
+function onEnd(x) {
+  if (startX === null) return;
+  const dx = x - startX;
   if (dx < -60) go(current + 1);
   if (dx >  60) go(current - 1);
-});
+  startX = null;
+}
+
+document.addEventListener('mousedown', e => onStart(e.clientX));
+document.addEventListener('mouseup', e => onEnd(e.clientX));
+
+document.addEventListener('touchstart', e => onStart(e.touches[0].clientX));
+document.addEventListener('touchend', e => onEnd(e.changedTouches[0].clientX));
 </script>
 
 </body>
