@@ -6,55 +6,63 @@
 <title>Mini App for Couples</title>
 <style>
 body, html { margin:0; padding:0; height:100%; width:100%; font-family: sans-serif; overflow: hidden; }
-#app { display:flex; flex-direction: column; height:100%; width:100%; }
-.topbar { flex:0 0 10%; background:#f5f5f5; display:flex; justify-content: space-around; align-items: center; font-weight: bold; }
+.screen { display:none; height:100%; width:100%; flex-direction:column; justify-content:center; align-items:center; }
+#nickScreen, #waitingScreen, #mainScreen, #brokeScreen { display:flex; }
+input { padding:8px; font-size:16px; margin-bottom:8px; }
+button { padding:8px 16px; font-size:16px; cursor:pointer; }
+#app { display:flex; flex-direction:column; height:100%; width:100%; }
+.topbar { flex:0 0 10%; background:#f5f5f5; display:flex; justify-content:space-around; align-items:center; font-weight:bold; }
 .middle { flex:0 0 80%; position:relative; overflow:hidden; }
 .desktopWrapper { display:flex; height:100%; transition: transform 0.3s ease; }
-.desktop { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:calc(100%/6); gap:8px; flex-shrink:0; width:100%; box-sizing:border-box; padding:8px; }
+.desktop { display:grid; grid-template-columns: repeat(4,1fr); grid-auto-rows: calc(100% / 6); gap:8px; flex-shrink:0; width:100%; box-sizing:border-box; padding:8px; }
 .tile { background:#fff; border-radius:12px; display:flex; justify-content:center; align-items:center; cursor:pointer; user-select:none; font-size:24px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
 .bottombar { flex:0 0 10%; background:#eee; display:flex; justify-content:center; align-items:center; }
-.screen { position:absolute; top:0; left:0; width:100%; height:100%; background:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:24px; }
-.screen input { font-size:20px; padding:6px; margin:8px; }
-.screen button { padding:8px 12px; font-size:18px; }
-.dots { position:absolute; bottom:12px; display:flex; gap:6px; }
-.dot { width:10px; height:10px; border-radius:50%; background:#ccc; }
+.dots { display:flex; justify-content:center; margin-top:8px; }
+.dot { width:10px; height:10px; border-radius:50%; background:#888; margin:0 4px; }
 .dot.active { background:#333; }
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- Главный экран с тайлами -->
-  <div id="mainScreen" style="display:none;">
+
+  <!-- Ввод ника партнёра -->
+  <div id="nickScreen" class="screen">
+    <input type="text" id="partnerInput" placeholder="Введите ник партнёра">
+    <button id="enterBtn">Подключиться</button>
+    <div id="statusMessage"></div>
+  </div>
+
+  <!-- Ожидание -->
+  <div id="waitingScreen" class="screen">
+    Ожидаем партнёра...
+  </div>
+
+  <!-- Главный экран -->
+  <div id="mainScreen" class="screen">
     <div class="topbar">
       <div>💰 120</div>
       <div>💎 3</div>
     </div>
+
     <div class="middle">
       <div class="desktopWrapper" id="desktopWrapper"></div>
-      <div class="dots" id="dots"></div>
+      <div class="dots" id="desktopDots"></div>
     </div>
+
     <div class="bottombar">Меню</div>
   </div>
 
-  <!-- Экран ввода ника партнера -->
-  <div id="nickScreen" class="screen">
-    <div>Введите ник партнёра:</div>
-    <input type="text" id="partnerNickInput" placeholder="ник">
-    <button id="enterNickBtn">Подключиться</button>
-    <div id="statusMessage" style="color:red;margin-top:12px;"></div>
+  <!-- Экран разрыва -->
+  <div id="brokeScreen" class="screen">
+    Партнёр разорвал связь.
   </div>
 
-  <!-- Экран разрыва -->
-  <div id="brokeScreen" class="screen" style="display:none;">
-    Партнёр вышел из пары
-  </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-// ===== Firebase =====
+/* ===== Firebase ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCXxIQD1aNxBvauiY65MMNWuwuXQYeKUn8",
   authDomain: "mini-app-forcouples.firebaseapp.com",
@@ -68,55 +76,59 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ===== Telegram Mini App =====
-const user = Telegram.WebApp.initDataUnsafe.user;
-const myNick = user.username ? user.username.replace(/@/g,'') : `User${Math.floor(Math.random()*1000)}`;
+/* ===== Пользователь ===== */
+const myNick = window.Telegram?.WebApp?.initDataUnsafe?.user?.username || 'guest'; // Telegram мини-эпс
 let partnerNick = '';
 let checkInterval = null;
 
-// ===== DOM =====
+/* ===== Экраны ===== */
 const nickScreen = document.getElementById('nickScreen');
+const waitingScreen = document.getElementById('waitingScreen');
 const mainScreen = document.getElementById('mainScreen');
 const brokeScreen = document.getElementById('brokeScreen');
-const partnerInput = document.getElementById('partnerNickInput');
-const enterBtn = document.getElementById('enterNickBtn');
+const partnerInput = document.getElementById('partnerInput');
+const enterBtn = document.getElementById('enterBtn');
 const statusMessage = document.getElementById('statusMessage');
 
-// ===== Tile system =====
+/* ===== Классы тайлов ===== */
 class Tile {
   constructor({title='', w=1, h=1, onClick=null, renderContent=null}) {
     this.title = title;
-    this.w=w; this.h=h; this.onClick=onClick; this.renderContent=renderContent;
+    this.w = w;
+    this.h = h;
+    this.onClick = onClick;
     this.el = document.createElement('div');
-    this.el.className='tile';
-    this.el.style.gridColumn=`span ${w}`;
-    this.el.style.gridRow=`span ${h}`;
-    if(onClick) this.el.onclick=()=>onClick(this);
-    if(renderContent) renderContent(this.el); else this.el.textContent=title;
+    this.el.className = 'tile';
+    this.el.style.gridColumn = `span ${w}`;
+    this.el.style.gridRow = `span ${h}`;
+    if(renderContent) renderContent(this.el);
+    else this.el.textContent = title;
+    if(this.onClick) this.el.onclick = () => this.onClick(this);
   }
   tick(deltaTime){}
 }
 
 class MoodTile extends Tile {
   constructor(initialEmoji='❔'){
-    super({title:'', w:1,h:1, onClick: (tile)=>{
-      const newEmoji=prompt("Выберите настроение:",tile.emoji)||tile.emoji;
-      tile.setEmoji(newEmoji);
-    }, renderContent: el=>{
+    super({title:'',w:1,h:1,renderContent:(el)=>{
       el.style.fontSize='48px';
       el.style.textAlign='center';
       el.style.lineHeight='1';
+    }, onClick:(tile)=>{
+      const newEmoji = prompt("Выберите настроение:", tile.emoji)||tile.emoji;
+      tile.setEmoji(newEmoji);
     }});
-    this.emoji=initialEmoji; this.update();
+    this.emoji=initialEmoji;
+    this.update();
   }
-  setEmoji(e){this.emoji=e; this.update();}
-  update(){this.el.textContent=this.emoji;}
+  setEmoji(emoji){ this.emoji=emoji; this.update(); }
+  update(){ this.el.textContent=this.emoji; }
 }
 
 class PulsingTile extends Tile {
-  constructor(){
-    super({title:'', w:1, h:1, renderContent: el=>{
-      this.flame=document.createElement('div');
+  constructor(){ 
+    super({title:'',w:1,h:1,renderContent:(el)=>{
+      this.flame = document.createElement('div');
       this.flame.textContent='🔥';
       this.flame.style.fontSize='32px';
       el.appendChild(this.flame);
@@ -125,13 +137,13 @@ class PulsingTile extends Tile {
   }
   tick(deltaTime){
     const speed=0.0003;
-    if(this.growing){ this.scale+=speed*deltaTime; if(this.scale>=1.2) this.growing=false;}
-    else { this.scale-=speed*deltaTime; if(this.scale<=1) this.growing=true;}
+    if(this.growing){ this.scale+=speed*deltaTime; if(this.scale>=1.2)this.growing=false; }
+    else{ this.scale-=speed*deltaTime; if(this.scale<=1)this.growing=true; }
     this.flame.style.transform=`scale(${this.scale})`;
   }
 }
 
-// ===== Demo tiles =====
+/* ===== Demo тайлы ===== */
 function createDemoTiles(){
   return [
     new Tile({title:'2x1', w:2, h:1, onClick:()=>alert('2x1 clicked')}),
@@ -145,116 +157,139 @@ function createDemoTiles(){
   ];
 }
 
-// ===== Swipe system =====
-let desktops=[], currentDesktop=0, startX=0, isDragging=false;
-const desktopWrapper=document.getElementById('desktopWrapper');
-const dotsContainer=document.getElementById('dots');
-
-function initDesktops(){
-  // First desktop
-  const desk1=document.createElement('div'); desk1.className='desktop';
-  desk1.tiles=createDemoTiles();
-  desk1.tiles.forEach(t=>desk1.appendChild(t.el));
-  desktopWrapper.appendChild(desk1); desktops.push(desk1);
-
-  // Second desktop example
-  const desk2=document.createElement('div'); desk2.className='desktop';
-  desk2.tiles=[];
-  const tileA=new Tile({title:'2x2', w:2,h:2});
-  const tileB=new PulsingTile();
-  desk2.tiles.push(tileA,tileB);
-  desk2.tiles.forEach(t=>desk2.appendChild(t.el));
-  desktopWrapper.appendChild(desk2); desktops.push(desk2);
-
-  // Dots
-  dotsContainer.innerHTML='';
-  desktops.forEach((_,i)=>{
-    const dot=document.createElement('div'); dot.className='dot';
-    if(i===0) dot.classList.add('active');
-    dotsContainer.appendChild(dot);
-  });
-}
-
-function switchDesktop(index){
-  if(index<0 || index>=desktops.length) return;
-  currentDesktop=index;
-  desktopWrapper.style.transform=`translateX(-${100*currentDesktop}%)`;
-  // update dots
-  Array.from(dotsContainer.children).forEach((d,i)=>d.classList.toggle('active',i===currentDesktop));
-}
-
-// Mouse & touch swipe
-desktopWrapper.addEventListener('mousedown', e=>{ startX=e.clientX; isDragging=true; });
-desktopWrapper.addEventListener('mousemove', e=>{
-  if(!isDragging) return;
-  const dx=e.clientX-startX;
-});
-desktopWrapper.addEventListener('mouseup', e=>{
-  if(!isDragging) return; isDragging=false;
-  const dx=e.clientX-startX;
-  if(dx<-50) switchDesktop(currentDesktop+1);
-  else if(dx>50) switchDesktop(currentDesktop-1);
-});
-
-desktopWrapper.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; isDragging=true; });
-desktopWrapper.addEventListener('touchmove', e=>{ if(!isDragging) return; });
-desktopWrapper.addEventListener('touchend', e=>{
-  if(!isDragging) return; isDragging=false;
-  const dx=e.changedTouches[0].clientX-startX;
-  if(dx<-50) switchDesktop(currentDesktop+1);
-  else if(dx>50) switchDesktop(currentDesktop-1);
-});
-
-// ===== Animation loop =====
-function animationLoop(ts){
-  if(!animationLoop.last) animationLoop.last=ts;
-  const dt=ts-animationLoop.last;
-  animationLoop.last=ts;
-  if(desktops[currentDesktop])
-    desktops[currentDesktop].tiles.forEach(t=>t.tick(dt));
-  requestAnimationFrame(animationLoop);
-}
-
-// ===== Pairing logic =====
-enterBtn.onclick=async ()=>{
-  partnerNick=partnerInput.value.replace(/@/g,'').trim();
+/* ===== Подключение партнёра ===== */
+enterBtn.onclick = async () => {
+  partnerNick = partnerInput.value.replace(/@/g,'').trim();
   if(!partnerNick){ statusMessage.textContent='Введите ник партнёра'; return;}
   statusMessage.textContent='';
+  
   await db.ref('partners/'+myNick).set({partnerNick,status:'waiting'});
+  nickScreen.style.display='none';
+  waitingScreen.style.display='flex';
+  
   checkPair();
 };
 
-async function checkPair(){
-  const myRef=db.ref('partners/'+myNick);
-  const partnerRef=db.ref('partners/'+partnerNick);
-  checkInterval=setInterval(async ()=>{
-    const partnerSnap=await partnerRef.get();
+function checkPair(){
+  const myRef = db.ref('partners/'+myNick);
+  const partnerRef = db.ref('partners/'+partnerNick);
+
+  checkInterval = setInterval(async ()=>{
+    const partnerSnap = await partnerRef.get();
     if(!partnerSnap.exists()) return;
-    const data=partnerSnap.val();
-    // проверка взаимного ников
+    const data = partnerSnap.val();
+
     if(data.partnerNick===myNick && data.status==='waiting'){
-      // установим статус paired
       await myRef.update({status:'paired'});
       await partnerRef.update({status:'paired'});
       startMainScreen();
       clearInterval(checkInterval);
     }
-    // проверка разрыва
-    if(data.status==='broke'){ showBroke(); clearInterval(checkInterval);}
+
+    if(data.status==='broke'){
+      showBroke();
+      clearInterval(checkInterval);
+    }
   },1000);
 }
 
 function startMainScreen(){
-  nickScreen.style.display='none';
+  waitingScreen.style.display='none';
   mainScreen.style.display='flex';
   initDesktops();
-  requestAnimationFrame(animationLoop);
 }
 
 function showBroke(){
-  mainScreen.style.display='none';
   nickScreen.style.display='none';
+  waitingScreen.style.display='none';
+  mainScreen.style.display='none';
   brokeScreen.style.display='flex';
+}
+
+/* ===== Десктопы и свайпы ===== */
+let desktops=[], currentDesktop=0;
+
+function initDesktops(){
+  const desktopWrapper=document.getElementById('desktopWrapper');
+  desktopWrapper.innerHTML=''; desktops=[];
+
+  const desk1=document.createElement('div'); desk1.className='desktop'; desk1.tiles=createDemoTiles();
+  desk1.tiles.forEach(t=>desk1.appendChild(t.el));
+  desktopWrapper.appendChild(desk1); desktops.push(desk1);
+
+  const desk2=document.createElement('div'); desk2.className='desktop'; desk2.tiles=[];
+  const tileA = new Tile({title:'2x2',w:2,h:2});
+  const tileB = new PulsingTile();
+  desk2.tiles.push(tileA,tileB);
+  desk2.tiles.forEach(t=>desk2.appendChild(t.el));
+  desktopWrapper.appendChild(desk2); desktops.push(desk2);
+
+  createDots();
+  attachSwipeEvents();
+  requestAnimationFrame(animationLoop);
+}
+
+/* ===== Дots ===== */
+function createDots(){
+  const dotsContainer=document.getElementById('desktopDots');
+  dotsContainer.innerHTML='';
+  desktops.forEach((_,i)=>{
+    const dot=document.createElement('div'); dot.className='dot'; if(i===currentDesktop)dot.classList.add('active');
+    dotsContainer.appendChild(dot);
+  });
+}
+
+function updateDots(){
+  const dots=document.querySelectorAll('.dot');
+  dots.forEach((d,i)=>d.classList.toggle('active', i===currentDesktop));
+}
+
+/* ===== Свайпы и мышь ===== */
+function attachSwipeEvents(){
+  const wrapper=document.getElementById('desktopWrapper');
+  let startX=0; let isDragging=false;
+
+  wrapper.addEventListener('mousedown', e=>{ startX=e.clientX; isDragging=true; });
+  wrapper.addEventListener('mousemove', e=>{
+    if(!isDragging) return;
+    const dx=e.clientX-startX;
+    if(Math.abs(dx)>50){
+      if(dx<0 && currentDesktop<desktops.length-1) currentDesktop++;
+      if(dx>0 && currentDesktop>0) currentDesktop--;
+      wrapper.style.transform=`translateX(-${currentDesktop*100}%)`;
+      updateDots();
+      isDragging=false;
+    }
+  });
+  wrapper.addEventListener('mouseup', ()=>isDragging=false);
+  wrapper.addEventListener('mouseleave', ()=>isDragging=false);
+
+  // сенсор
+  wrapper.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; isDragging=true; });
+  wrapper.addEventListener('touchmove', e=>{
+    if(!isDragging) return;
+    const dx=e.touches[0].clientX-startX;
+    if(Math.abs(dx)>50){
+      if(dx<0 && currentDesktop<desktops.length-1) currentDesktop++;
+      if(dx>0 && currentDesktop>0) currentDesktop--;
+      wrapper.style.transform=`translateX(-${currentDesktop*100}%)`;
+      updateDots();
+      isDragging=false;
+    }
+  });
+  wrapper.addEventListener('touchend', ()=>isDragging=false);
+}
+
+/* ===== Анимации тайлов ===== */
+function animationLoop(timestamp){
+  if(!animationLoop.last) animationLoop.last=timestamp;
+  const deltaTime=timestamp-animationLoop.last;
+  animationLoop.last=timestamp;
+
+  const currentDesk=desktops[currentDesktop];
+  if(currentDesk) currentDesk.tiles.forEach(t=>t.tick(deltaTime));
+
+  requestAnimationFrame(animationLoop);
 }
 </script>
 </body>
