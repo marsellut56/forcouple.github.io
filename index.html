@@ -125,7 +125,6 @@ class Tile {
     this.el.style.gridRow = `span ${h}`;
     this.el.textContent = title;
   }
-
   tick(dt) {}
 }
 
@@ -220,27 +219,41 @@ function updateDots() {
 }
 
 /* =========================
-   STRICT SWIPE
+   STRICT SWIPE (TOUCH + MOUSE)
 ========================= */
 
 let current = 0;
 let startX = 0;
+const SWIPE_THRESHOLD = 60;
 
 function goTo(index) {
   if (index < 0 || index >= desktops.length) return;
   current = index;
-  wrapper.style.transform = `translateX(-${current * (100 / desktops.length)}%)`;
+  wrapper.style.transform =
+    `translateX(-${current * (100 / desktops.length)}%)`;
   updateDots();
 }
 
+/* --- touch --- */
 wrapper.addEventListener('touchstart', e => {
   startX = e.touches[0].clientX;
 });
 
 wrapper.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - startX;
-  if (dx < -60) goTo(current + 1);
-  if (dx > 60) goTo(current - 1);
+  if (dx < -SWIPE_THRESHOLD) goTo(current + 1);
+  if (dx > SWIPE_THRESHOLD) goTo(current - 1);
+});
+
+/* --- mouse --- */
+wrapper.addEventListener('mousedown', e => {
+  startX = e.clientX;
+});
+
+wrapper.addEventListener('mouseup', e => {
+  const dx = e.clientX - startX;
+  if (dx < -SWIPE_THRESHOLD) goTo(current + 1);
+  if (dx > SWIPE_THRESHOLD) goTo(current - 1);
 });
 
 /* =========================
