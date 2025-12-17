@@ -3,80 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Главный экран</title>
+<title>Home Screen</title>
 
 <style>
 html, body {
-  margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  font-family:sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: sans-serif;
+  background: #f2f2f2;
 }
 
 #app {
-  display:flex;
-  flex-direction:column;
-  height:100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ---------- TOP ---------- */
+/* ===== Верх ===== */
 .topbar {
-  height:10%;
-  background:#f5f5f5;
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-  font-weight:bold;
+  height: 10%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #ffffff;
+  font-weight: bold;
 }
 
-/* ---------- MIDDLE ---------- */
+/* ===== Центр ===== */
 .middle {
-  height:80%;
-  position:relative;
-  overflow:hidden;
+  height: 80%;
+  overflow: hidden;
+  position: relative;
 }
 
 .desktopWrapper {
-  display:flex;
-  height:100%;
-  will-change: transform;
+  height: 100%;
+  display: flex;
+  transition: transform 0.35s ease-out;
 }
 
-/* каждый рабочий стол = экран */
+/* ===== Рабочий стол ===== */
 .desktop {
-  width:100vw;
-  height:100%;
-  flex-shrink:0;
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
 
-  display:grid;
+  display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: calc(100% / 6);
-  gap:8px;
-  padding:8px;
-  box-sizing:border-box;
+  grid-auto-rows: calc(84% / 6);
+  gap: 8px;
+
+  padding: 8px;
+  box-sizing: border-box;
 }
 
-/* ---------- TILE ---------- */
+/* ===== Тайлы ===== */
 .tile {
-  background:#fff;
-  border-radius:12px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:24px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.1);
-  user-select:none;
+  background: #fff;
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  user-select: none;
 }
 
-/* ---------- BOTTOM ---------- */
+/* ===== Низ ===== */
 .bottombar {
-  height:10%;
-  background:#eee;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  height: 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+}
+
+/* ===== Точки ===== */
+.dots {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.dot.active {
+  background: #333;
 }
 </style>
 </head>
@@ -90,120 +109,163 @@ html, body {
   </div>
 
   <div class="middle">
-    <div class="desktopWrapper" id="desktopWrapper"></div>
+    <div id="desktopWrapper" class="desktopWrapper"></div>
   </div>
 
-  <div class="bottombar">Меню</div>
+  <div class="bottombar">
+    <div id="dots" class="dots"></div>
+  </div>
 
 </div>
 
 <script>
-/* ================= TILE SYSTEM ================= */
-
+/* ===== Базовый тайл ===== */
 class Tile {
-  constructor({title='', w=1, h=1}) {
+  constructor({ title='', w=1, h=1, render=null }) {
     this.el = document.createElement('div');
     this.el.className = 'tile';
     this.el.style.gridColumn = `span ${w}`;
     this.el.style.gridRow = `span ${h}`;
-    this.el.textContent = title;
+    if (render) render(this.el);
+    else this.el.textContent = title;
+  }
+  tick() {}
+}
+
+/* ===== Mood Tile ===== */
+class MoodTile extends Tile {
+  constructor(emoji='🙂') {
+    super({
+      w:1,
+      h:1,
+      render: el => {
+        el.style.fontSize = '42px';
+        el.textContent = emoji;
+        el.onclick = () => {
+          const e = prompt('Настроение:', el.textContent);
+          if (e) el.textContent = e;
+        };
+      }
+    });
   }
 }
 
+/* ===== Пульсирующий тайл ===== */
 class PulsingTile extends Tile {
   constructor() {
-    super({w:1, h:1});
-    this.flame = document.createElement('div');
-    this.flame.textContent = '🔥';
-    this.flame.style.fontSize = '32px';
-    this.el.appendChild(this.flame);
-    this.t = 0;
+    super({
+      w:1,
+      h:1,
+      render: el => {
+        this.icon = document.createElement('div');
+        this.icon.textContent = '🔥';
+        this.icon.style.fontSize = '32px';
+        el.appendChild(this.icon);
+      }
+    });
+    this.scale = 1;
+    this.dir = 1;
   }
 
   tick(dt) {
-    this.t += dt * 0.002;
-    const scale = 1 + Math.sin(this.t) * 0.15;
-    this.flame.style.transform = `scale(${scale})`;
+    this.scale += this.dir * dt * 0.0004;
+    if (this.scale > 1.25) this.dir = -1;
+    if (this.scale < 1.0) this.dir = 1;
+    this.icon.style.transform = `scale(${this.scale})`;
   }
 }
 
-/* ================= DESKTOPS ================= */
+/* ===== Демо тайлы ===== */
+function createDemoTiles() {
+  return [
+    new Tile({ title:'2x1', w:2, h:1 }),
+    new Tile({ title:'2x2', w:2, h:2 }),
+    new Tile({ title:'4x1', w:4, h:1 }),
+    new Tile({ title:'1x2', w:1, h:2 }),
+    new MoodTile('😊'),
+    new Tile({ title:'1x1', w:1, h:1 }),
+    new Tile({ title:'2x1', w:2, h:1 }),
+    new Tile({ title:'1x2', w:1, h:2 }),
+  ];
+}
 
-const wrapper = document.getElementById('desktopWrapper');
+/* ===== Рабочие столы ===== */
+const desktopWrapper = document.getElementById('desktopWrapper');
 const desktops = [];
 
-// desktop 1
-const desk1 = document.createElement('div');
-desk1.className = 'desktop';
-desk1.tiles = [
-  new Tile({title:'2x1', w:2}),
-  new Tile({title:'2x2', w:2, h:2}),
-  new Tile({title:'4x1', w:4}),
-  new Tile({title:'1x2', h:2}),
-];
-desk1.tiles.forEach(t => desk1.appendChild(t.el));
-wrapper.appendChild(desk1);
-desktops.push(desk1);
+function addDesktop(tiles) {
+  const desk = document.createElement('div');
+  desk.className = 'desktop';
+  desk.tiles = tiles;
+  tiles.forEach(t => desk.appendChild(t.el));
+  desktopWrapper.appendChild(desk);
+  desktops.push(desk);
+}
 
-// desktop 2
-const desk2 = document.createElement('div');
-desk2.className = 'desktop';
-desk2.tiles = [
+/* Создаем экраны */
+addDesktop(createDemoTiles());
+addDesktop([
+  new Tile({ title:'2x2', w:2, h:2 }),
   new PulsingTile(),
-  new Tile({title:'1x1'})
-];
-desk2.tiles.forEach(t => desk2.appendChild(t.el));
-wrapper.appendChild(desk2);
-desktops.push(desk2);
+  new MoodTile('😎')
+]);
 
-/* ================= SWIPE SYSTEM ================= */
+/* ===== Точки ===== */
+const dotsEl = document.getElementById('dots');
 
-let current = 0;
-let startX = 0;
-let offsetX = 0;
-let dragging = false;
-
-const screenW = () => window.innerWidth;
-
-function updatePosition(animated=true) {
-  wrapper.style.transition = animated ? 'transform 0.3s ease' : 'none';
-  wrapper.style.transform = `translateX(${-current * screenW()}px)`;
+function renderDots() {
+  dotsEl.innerHTML = '';
+  desktops.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === currentDesktop ? ' active' : '');
+    dotsEl.appendChild(d);
+  });
 }
 
-wrapper.addEventListener('pointerdown', e => {
-  dragging = true;
+/* ===== Свайпы (строгие) ===== */
+let currentDesktop = 0;
+let startX = null;
+const SWIPE_THRESHOLD = 60;
+
+function goToDesktop(index) {
+  index = Math.max(0, Math.min(index, desktops.length - 1));
+  currentDesktop = index;
+  desktopWrapper.style.transform = `translateX(-${index * 100}%)`;
+  renderDots();
+}
+
+desktopWrapper.addEventListener('touchstart', e => {
+  startX = e.touches[0].clientX;
+});
+
+desktopWrapper.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - startX;
+  if (dx < -SWIPE_THRESHOLD) goToDesktop(currentDesktop + 1);
+  if (dx >  SWIPE_THRESHOLD) goToDesktop(currentDesktop - 1);
+});
+
+desktopWrapper.addEventListener('mousedown', e => {
   startX = e.clientX;
-  offsetX = -current * screenW();
-  wrapper.setPointerCapture(e.pointerId);
 });
 
-wrapper.addEventListener('pointermove', e => {
-  if(!dragging) return;
+desktopWrapper.addEventListener('mouseup', e => {
   const dx = e.clientX - startX;
-  wrapper.style.transition = 'none';
-  wrapper.style.transform = `translateX(${offsetX + dx}px)`;
+  if (dx < -SWIPE_THRESHOLD) goToDesktop(currentDesktop + 1);
+  if (dx >  SWIPE_THRESHOLD) goToDesktop(currentDesktop - 1);
 });
 
-wrapper.addEventListener('pointerup', e => {
-  dragging = false;
-  const dx = e.clientX - startX;
+/* ===== Анимации ===== */
+function animationLoop(t) {
+  if (!animationLoop.last) animationLoop.last = t;
+  const dt = t - animationLoop.last;
+  animationLoop.last = t;
 
-  if(dx < -screenW() * 0.25 && current < desktops.length-1) current++;
-  if(dx >  screenW() * 0.25 && current > 0) current--;
-
-  updatePosition(true);
-});
-
-/* ================= ANIMATION LOOP ================= */
-
-let last = 0;
-function loop(ts) {
-  const dt = ts - last;
-  last = ts;
-  desktops[current].tiles.forEach(t => t.tick?.(dt));
-  requestAnimationFrame(loop);
+  desktops[currentDesktop].tiles.forEach(tile => tile.tick(dt));
+  requestAnimationFrame(animationLoop);
 }
-requestAnimationFrame(loop);
+
+renderDots();
+requestAnimationFrame(animationLoop);
 </script>
 </body>
 </html>
